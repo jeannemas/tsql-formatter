@@ -5,6 +5,7 @@ TransactSQLFormatterOptions options = new()
   IndentationString = "  ",
   IdentifierStyle = TransactSQLFormatterOptions.IdentifierStyles.SquareBrackets,
   KeywordCase = TransactSQLFormatterOptions.KeywordCasing.Uppercase,
+  LinesBetweenStatements = 1,
 };
 TransactSQLFormatter formatter = new(options);
 string sql = @"

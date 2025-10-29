@@ -956,6 +956,12 @@ internal class Formatter(TransactSQLFormatterOptions options)
           break;
         }
     }
+
+    // Add configured number of blank lines between statements.
+    foreach (int _ in Enumerable.Range(0, Options.LinesBetweenStatements))
+    {
+      lines.Add(string.Empty);
+    }
   }
 
   /// <summary>

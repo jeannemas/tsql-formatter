@@ -23,6 +23,13 @@ public class TransactSQLFormatterOptions
   /// </summary>
   public KeywordCasing KeywordCase = KeywordCasing.Uppercase;
 
+  /// <summary>
+  /// Gets or sets the number of lines between SQL statements.
+  /// 
+  /// Default is 1.
+  /// </summary>
+  public int LinesBetweenStatements = 1;
+
   public enum IdentifierStyles
   {
     DoubleQuotes,
