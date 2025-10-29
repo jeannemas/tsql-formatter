@@ -34,6 +34,29 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a boolean expression.
+  /// </summary>
+  /// <param name="booleanExpression">
+  /// The boolean expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted boolean expression to.
+  /// </param>
+  public void BooleanExpression(SqlBooleanExpression booleanExpression, ref List<string> lines)
+  {
+    switch (booleanExpression)
+    {
+      default:
+        {
+          Utils.Debug($"Unrecognized boolean expression type: {booleanExpression.GetType().FullName}");
+          lines.Add(booleanExpression.Sql); // TODO
+
+          break;
+        }
+    }
+  }
+
+  /// <summary>
   /// Formats a column reference expression.
   /// </summary>
   /// <param name="columnRefExpression">
@@ -106,7 +129,42 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void GroupByClause(SqlGroupByClause groupByClause, ref List<string> lines)
   {
-    lines.Add(groupByClause.Sql); // TODO
+    lines.Add(Keyword(Keywords.GROUP_BY));
+
+    foreach (SqlGroupByItem groupByItem in groupByClause.Items)
+    {
+      GroupByItem(groupByItem, ref lines);
+    }
+  }
+
+  /// <summary>
+  /// Formats a GROUP BY item.
+  /// </summary>
+  /// <param name="groupByItem">
+  /// The GROUP BY item to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted GROUP BY item to.
+  /// </param>
+  public void GroupByItem(SqlGroupByItem groupByItem, ref List<string> lines)
+  {
+    switch (groupByItem)
+    {
+      case SqlSimpleGroupByItem simpleGroupByItem:
+        {
+          SimpleGroupByItem(simpleGroupByItem, ref lines);
+
+          break;
+        }
+
+      default:
+        {
+          Utils.Debug($"Unrecognized GROUP BY item type: {groupByItem.GetType().FullName}");
+          lines.Add(groupByItem.Sql); // TODO
+
+          break;
+        }
+    }
   }
 
   /// <summary>
@@ -120,7 +178,13 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void HavingClause(SqlHavingClause havingClause, ref List<string> lines)
   {
-    lines.Add(havingClause.Sql); // TODO
+    lines.Add(Keyword(Keywords.HAVING));
+
+    List<string> booleanExpressionLines = [];
+
+    BooleanExpression(havingClause.Expression, ref booleanExpressionLines);
+
+    lines.AddRange(booleanExpressionLines.Select(line => $"{Indent()}{line}"));
   }
 
   /// <summary>
@@ -557,7 +621,9 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SelectIntoClause(SqlSelectIntoClause selectIntoClause, ref List<string> lines)
   {
-    lines.Add(selectIntoClause.Sql); // TODO
+    lines.Add($"{Keyword(Keywords.INTO)} ");
+
+    ObjectIdentifier(selectIntoClause.IntoTarget, ref lines);
   }
 
   /// <summary>
@@ -646,6 +712,24 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a simple GROUP BY item.
+  /// </summary>
+  /// <param name="simpleGroupByItem">
+  /// The simple GROUP BY item to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted simple GROUP BY item to.
+  /// </param>
+  public void SimpleGroupByItem(SqlSimpleGroupByItem simpleGroupByItem, ref List<string> lines)
+  {
+    List<string> expressionLines = [];
+
+    ScalarExpression(simpleGroupByItem.Expression, ref expressionLines);
+
+    lines.AddRange(expressionLines.Select(line => $"{Indent()}{line}"));
+  }
+
+  /// <summary>
   /// Formats a generic SQL statement.
   /// </summary>
   /// <param name="statement">
@@ -688,13 +772,6 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     switch (tableExpression)
     {
-      case SqlTableRefExpression tableRefExpression:
-        {
-          lines.Add(tableExpression.Sql); // TODO
-
-          break;
-        }
-
       default:
         {
           Utils.Debug($"Unrecognized table expression type: {tableExpression.GetType().FullName}");
@@ -755,6 +832,12 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void WhereClause(SqlWhereClause whereClause, ref List<string> lines)
   {
-    lines.Add(whereClause.Sql); // TODO
+    lines.Add(Keyword(Keywords.WHERE));
+
+    List<string> booleanExpressionLines = [];
+
+    BooleanExpression(whereClause.Expression, ref booleanExpressionLines);
+
+    lines.AddRange(booleanExpressionLines.Select(line => $"{Indent()}{line}"));
   }
 }

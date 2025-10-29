@@ -14,9 +14,11 @@ string sql = @"
     where [Status] = 'Active'
   )
   select [C].bob as u, *, @var = (select 1)
+  into dbo.[ActiveUsers]
   from cte /* a comment inside a select */ as [C]
   where [C].[Active] = 1 AND [C].[Role] > 1
   GROUP BY [foo]
+  having count(*) > 5
   order by a asc
   OFFSET null ROWS FETCH NEXT 5 ROWS ONLY;
   -- some inline comment
