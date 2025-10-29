@@ -7,7 +7,7 @@ namespace tsql_formatter;
 /// The base class for formatters.
 /// </summary>
 /// <param name="options">
-/// The formatting options. If null, default options are used.
+/// The formatting options.
 /// </param>
 internal class Formatter(TransactSQLFormatterOptions options)
 {
@@ -34,6 +34,50 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a binary boolean expression.
+  /// </summary>
+  /// <param name="binaryBooleanExpression">
+  /// The binary boolean expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted binary boolean expression to.
+  /// </param>
+  public void BinaryBooleanExpression(SqlBinaryBooleanExpression binaryBooleanExpression, ref List<string> lines)
+  {
+    List<string> leftExpressionLines = [];
+
+    BooleanExpression(binaryBooleanExpression.Left, ref leftExpressionLines);
+
+    if (leftExpressionLines.Count > 1)
+    {
+      lines.Add("(");
+      lines.AddRange(leftExpressionLines.Select(line => $"{Indent()}{line}"));
+      lines.Add(")");
+    }
+    else
+    {
+      lines.Add(leftExpressionLines.First());
+    }
+
+    lines.Add($"{BooleanOperatorType(binaryBooleanExpression.Operator)} ");
+
+    List<string> rightExpressionLines = [];
+
+    BooleanExpression(binaryBooleanExpression.Right, ref rightExpressionLines);
+
+    if (rightExpressionLines.Count > 1)
+    {
+      Utils.AppendToLast(lines, "(");
+      lines.AddRange(rightExpressionLines.Select(line => $"{Indent()}{line}"));
+      lines.Add(")");
+    }
+    else
+    {
+      Utils.AppendToLast(lines, rightExpressionLines.First());
+    }
+  }
+
+  /// <summary>
   /// Formats a boolean expression.
   /// </summary>
   /// <param name="booleanExpression">
@@ -46,14 +90,47 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     switch (booleanExpression)
     {
+      case SqlBinaryBooleanExpression binaryBooleanExpression:
+        {
+          BinaryBooleanExpression(binaryBooleanExpression, ref lines);
+
+          break;
+        }
+
+      case SqlComparisonBooleanExpression comparisonBooleanExpression:
+        {
+          ComparisonBooleanExpression(comparisonBooleanExpression, ref lines);
+
+          break;
+        }
+
       default:
         {
           Utils.Debug($"Unrecognized boolean expression type: {booleanExpression.GetType().FullName}");
-          lines.Add(booleanExpression.Sql); // TODO
+          lines.Add(booleanExpression.Sql);
 
           break;
         }
     }
+  }
+
+  /// <summary>
+  /// Formats a boolean operator type.
+  /// </summary>
+  /// <param name="booleanOperatorType">
+  /// The boolean operator type to format.
+  /// </param>
+  /// <returns>
+  /// The formatted boolean operator type.
+  /// </returns>
+  public string BooleanOperatorType(SqlBooleanOperatorType booleanOperatorType)
+  {
+    return booleanOperatorType switch
+    {
+      SqlBooleanOperatorType.And => Keyword(Keywords.AND),
+      SqlBooleanOperatorType.Or => Keyword(Keywords.OR),
+      _ => string.Empty,
+    };
   }
 
   /// <summary>
@@ -97,6 +174,73 @@ internal class Formatter(TransactSQLFormatterOptions options)
     lines.Add(header);
     lines.AddRange(cteLines.Select(line => $"{Indent()}{line}"));
     lines.Add(")");
+  }
+
+  /// <summary>
+  /// Formats a comparison boolean expression.
+  /// </summary>
+  /// <param name="comparisonBooleanExpression">
+  /// The comparison boolean expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted comparison boolean expression to.
+  /// </param>
+  public void ComparisonBooleanExpression(SqlComparisonBooleanExpression comparisonBooleanExpression, ref List<string> lines)
+  {
+    List<string> leftExpressionLines = [];
+
+    ScalarExpression(comparisonBooleanExpression.Left, ref leftExpressionLines);
+
+    if (leftExpressionLines.Count > 1)
+    {
+      lines.Add("(");
+      lines.AddRange(leftExpressionLines.Select(line => $"{Indent()}{line}"));
+      lines.Add(")");
+    }
+    else
+    {
+      lines.Add(leftExpressionLines.First());
+    }
+
+    Utils.AppendToLast(lines, $" {ComparisonBooleanExpressionType(comparisonBooleanExpression.ComparisonOperator)} ");
+
+    List<string> rightExpressionLines = [];
+
+    ScalarExpression(comparisonBooleanExpression.Right, ref rightExpressionLines);
+
+    if (rightExpressionLines.Count > 1)
+    {
+      lines.Add("(");
+      lines.AddRange(rightExpressionLines.Select(line => $"{Indent()}{line}"));
+      lines.Add(")");
+    }
+    else
+    {
+      Utils.AppendToLast(lines, rightExpressionLines.First());
+    }
+  }
+
+  /// <summary>
+  /// Formats a comparison type.
+  /// </summary>
+  /// <param name="comparisonType">
+  /// The comparison type to format.
+  /// </param>
+  /// <returns>
+  /// The formatted comparison type.
+  /// </returns>
+  public string ComparisonBooleanExpressionType(SqlComparisonBooleanExpressionType comparisonType)
+  {
+    return comparisonType switch
+    {
+      SqlComparisonBooleanExpressionType.Equals => "=",
+      SqlComparisonBooleanExpressionType.GreaterThan => ">",
+      SqlComparisonBooleanExpressionType.LessThan => "<",
+      SqlComparisonBooleanExpressionType.GreaterThanOrEqual => ">=",
+      SqlComparisonBooleanExpressionType.LessThanOrEqual => "<=",
+      SqlComparisonBooleanExpressionType.NotEqual => "<>",
+      _ => string.Empty,
+    };
   }
 
   /// <summary>
@@ -188,6 +332,36 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a SQL hint.
+  /// </summary>
+  /// <param name="hint">
+  /// The SQL hint to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted SQL hint to.
+  /// </param>
+  public void Hint(SqlHint hint, ref List<string> lines)
+  {
+    switch (hint)
+    {
+      case SqlTableHint tableHint:
+        {
+          TableHint(tableHint, ref lines);
+
+          break;
+        }
+
+      default:
+        {
+          Utils.Debug($"Unrecognized hint type: {hint.GetType().FullName}");
+          lines.Add(hint.Sql);
+
+          break;
+        }
+    }
+  }
+
+  /// <summary>
   /// Formats an identifier.
   /// </summary>
   /// <param name="identifier">
@@ -274,6 +448,20 @@ internal class Formatter(TransactSQLFormatterOptions options)
       LiteralValueType.UnicodeString => $"N'{literalExpression.Value.Replace("'", "''")}'",
       _ => literalExpression.Value,
     };
+  }
+
+  /// <summary>
+  /// Formats a multipart identifier.
+  /// </summary>
+  /// <param name="multipartIdentifier">
+  /// The multipart identifier to format.
+  /// </param>
+  /// <returns>
+  /// The formatted multipart identifier.
+  /// </returns>
+  public string MultipartIdentifier(SqlMultipartIdentifier multipartIdentifier)
+  {
+    return string.Join(".", multipartIdentifier.Select(Identifier));
   }
 
   /// <summary>
@@ -385,23 +573,14 @@ internal class Formatter(TransactSQLFormatterOptions options)
     ScalarExpression(orderByItem.Expression, ref expressionLines);
 
     lines.AddRange(expressionLines.Select(line => $"{Indent()}{line}"));
-
-    switch (orderByItem.SortOrder)
-    {
-      case SqlSortOrder.Ascending:
-        {
-          Utils.AppendToLast(lines, $" {Keyword(Keywords.ASC)}");
-
-          break;
-        }
-
-      case SqlSortOrder.Descending:
-        {
-          Utils.AppendToLast(lines, $" {Keyword(Keywords.DESC)}");
-
-          break;
-        }
-    }
+    Utils.AppendToLast(
+      lines,
+      orderByItem.SortOrder switch
+      {
+        SqlSortOrder.Ascending => $" {Keyword(Keywords.ASC)}",
+        SqlSortOrder.Descending => $" {Keyword(Keywords.DESC)}",
+        _ => string.Empty,
+      });
   }
 
   /// <summary>
@@ -563,10 +742,30 @@ internal class Formatter(TransactSQLFormatterOptions options)
           break;
         }
 
+      case SqlScalarRefExpression scalarRefExpression:
+        {
+          lines.Add(MultipartIdentifier(scalarRefExpression.MultipartIdentifier));
+
+          break;
+        }
+
+      case SqlScalarSubQueryExpression scalarSubQueryExpression:
+        {
+          List<string> subqueryLines = [];
+
+          QueryExpression(scalarSubQueryExpression.QueryExpression, ref subqueryLines);
+
+          lines.Add("(");
+          lines.AddRange(subqueryLines.Select(line => $"{Indent()}{line}"));
+          lines.Add(")");
+
+          break;
+        }
+
       default:
         {
           Utils.Debug($"Unrecognized scalar expression type: {scalarExpression.GetType().FullName}");
-          lines.Add(scalarExpression.Sql); // TODO
+          lines.Add(scalarExpression.Sql);
 
           break;
         }
@@ -772,13 +971,74 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     switch (tableExpression)
     {
-      default:
+      case SqlTableRefExpression tableRefExpression:
         {
-          Utils.Debug($"Unrecognized table expression type: {tableExpression.GetType().FullName}");
-          lines.Add(tableExpression.Sql); // TODO
+          TableRefExpression(tableRefExpression, ref lines);
 
           break;
         }
+
+      default:
+        {
+          Utils.Debug($"Unrecognized table expression type: {tableExpression.GetType().FullName}");
+          lines.Add(tableExpression.Sql);
+
+          break;
+        }
+    }
+  }
+
+  /// <summary>
+  /// Formats a table hint.
+  /// </summary>
+  /// <param name="tableHint">
+  /// The table hint to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted table hint to.
+  /// </param>
+  public void TableHint(SqlTableHint tableHint, ref List<string> lines)
+  {
+    lines.Add(Keyword(tableHint.Type.ToString()));
+  }
+
+  /// <summary>
+  /// Formats a table reference expression.
+  /// </summary>
+  /// <param name="tableRefExpression">
+  /// The table reference expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted table reference expression to.
+  /// </param>
+  public void TableRefExpression(SqlTableRefExpression tableRefExpression, ref List<string> lines)
+  {
+    ObjectIdentifier(tableRefExpression.ObjectIdentifier, ref lines);
+
+    if (tableRefExpression.Alias is SqlIdentifier aliasIdentifier)
+    {
+      lines.Add($"{Indent()}{Keyword(Keywords.AS)} {Identifier(aliasIdentifier)}");
+    }
+
+    if (tableRefExpression.Hints is SqlHintCollection hintCollection)
+    {
+      List<string> hintLines = [];
+
+      foreach (SqlHint hint in hintCollection)
+      {
+        Hint(hint, ref hintLines);
+      }
+
+      if (hintLines.Count > 1)
+      {
+        lines.Add($"{Indent()}{Keyword(Keywords.WITH)} (");
+        lines.AddRange(hintLines.Select(line => $"{Indent()}{line}"));
+        lines.Add($"{Indent()})");
+      }
+      else
+      {
+        lines.Add($"{Indent()}{Keyword(Keywords.WITH)} ({hintLines.First()})");
+      }
     }
   }
 

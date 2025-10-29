@@ -10,7 +10,7 @@ TransactSQLFormatter formatter = new(options);
 string sql = @"
   with cte (dada) as (
     select distinct top 2 e.e as b
-    from dbo.[Employees]
+    from dbo.[Employees] as e with (nolock)
     where [Status] = 'Active'
   )
   select [C].bob as u, *, @var = (select 1)

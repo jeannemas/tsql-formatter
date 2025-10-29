@@ -2,6 +2,7 @@ namespace tsql_formatter;
 
 internal class Keywords
 {
+  public const string AND = "AND";
   public const string AS = "AS";
   public const string ASC = "ASC";
   public const string DEFAULT = "DEFAULT";
@@ -14,8 +15,10 @@ internal class Keywords
   public const string HAVING = "HAVING";
   public const string INSERT_INTO = "INSERT INTO";
   public const string INTO = "INTO";
+  public const string NOLOCK = "NOLOCK";
   public const string NULL = "NULL";
   public const string OFFSET = "OFFSET";
+  public const string OR = "OR";
   public const string ORDER_BY = "ORDER BY";
   public const string PERCENT = "PERCENT";
   public const string ROWS = "ROWS";
