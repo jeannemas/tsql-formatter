@@ -485,7 +485,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       .Where(section => section != null && !string.IsNullOrWhiteSpace(section.Value))
       .Select(section => Identifier(section!));
 
-    Utils.AppendToLast(lines, $"{string.Join(".", sections)}.");
+    Utils.AppendToLast(lines, $"{string.Join(".", sections)}");
   }
 
   /// <summary>
