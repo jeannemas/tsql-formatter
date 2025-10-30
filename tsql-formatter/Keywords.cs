@@ -2,6 +2,7 @@ namespace tsql_formatter;
 
 internal class Keywords
 {
+  public const string ALL = "ALL";
   public const string AND = "AND";
   public const string AS = "AS";
   public const string ASC = "ASC";

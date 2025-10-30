@@ -17,6 +17,45 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private readonly TransactSQLFormatterOptions Options = options;
 
   /// <summary>
+  /// Formats an aggregate function call expression.
+  /// </summary>
+  /// <param name="aggregateFunctionCallExpression">
+  /// The aggregate function call expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted aggregate function call expression to.
+  /// </param>
+  public void AggregateFunctionCallExpression(SqlAggregateFunctionCallExpression aggregateFunctionCallExpression, ref List<string> lines)
+  {
+    lines.Add($"{Keyword(aggregateFunctionCallExpression.FunctionName)}(");
+
+    Utils.AppendToLast(lines, aggregateFunctionCallExpression.SetQuantifier switch
+    {
+      SqlSetQuantifier.All => $"{Keyword(Keywords.ALL)} ",
+      SqlSetQuantifier.Distinct => $"{Keyword(Keywords.DISTINCT)} ",
+      _ => string.Empty,
+    });
+
+    if (aggregateFunctionCallExpression.IsStar)
+    {
+      Utils.AppendToLast(lines, "*)");
+    }
+    else
+    {
+      foreach (SqlScalarExpression scalarExpression in aggregateFunctionCallExpression.Arguments)
+      {
+        List<string> argumentLines = [];
+
+        ScalarExpression(scalarExpression, ref argumentLines);
+
+        lines.AddRange(IndentStrings(argumentLines));
+      }
+
+      lines.Add(")");
+    }
+  }
+
+  /// <summary>
   /// Formats a SQL batch.
   /// </summary>
   /// <param name="batch">
@@ -51,7 +90,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
     if (leftExpressionLines.Count > 1)
     {
       lines.Add("(");
-      lines.AddRange(leftExpressionLines.Select(line => $"{Indent()}{line}"));
+      lines.AddRange(IndentStrings(leftExpressionLines));
       lines.Add(")");
     }
     else
@@ -68,7 +107,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
     if (rightExpressionLines.Count > 1)
     {
       Utils.AppendToLast(lines, "(");
-      lines.AddRange(rightExpressionLines.Select(line => $"{Indent()}{line}"));
+      lines.AddRange(IndentStrings(rightExpressionLines));
       lines.Add(")");
     }
     else
@@ -172,7 +211,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
     QueryExpression(commonTableExpression.QueryExpression, ref cteLines);
 
     lines.Add(header);
-    lines.AddRange(cteLines.Select(line => $"{Indent()}{line}"));
+    lines.AddRange(IndentStrings(cteLines));
     lines.Add(")");
   }
 
@@ -194,7 +233,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
     if (leftExpressionLines.Count > 1)
     {
       lines.Add("(");
-      lines.AddRange(leftExpressionLines.Select(line => $"{Indent()}{line}"));
+      lines.AddRange(IndentStrings(leftExpressionLines));
       lines.Add(")");
     }
     else
@@ -211,7 +250,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
     if (rightExpressionLines.Count > 1)
     {
       lines.Add("(");
-      lines.AddRange(rightExpressionLines.Select(line => $"{Indent()}{line}"));
+      lines.AddRange(IndentStrings(rightExpressionLines));
       lines.Add(")");
     }
     else
@@ -328,7 +367,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
     BooleanExpression(havingClause.Expression, ref booleanExpressionLines);
 
-    lines.AddRange(booleanExpressionLines.Select(line => $"{Indent()}{line}"));
+    lines.AddRange(IndentStrings(booleanExpressionLines));
   }
 
   /// <summary>
@@ -404,9 +443,24 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// <returns>
   /// The indentation string.
   /// </returns>
-  public string Indent(int level = 1)
+  public string Indentation(int level = 1)
   {
     return string.Concat(Enumerable.Repeat(Options.IndentationString, level));
+  }
+
+  /// <summary>
+  /// Indents multiple lines by the specified level.
+  /// </summary>
+  /// <param name="lines">
+  /// The lines to indent.
+  /// </param>
+  /// <param name="level">
+  /// The indentation level. Default is 1.
+  /// </param>
+  /// <returns></returns>
+  public IEnumerable<string> IndentStrings(IEnumerable<string> lines, int level = 1)
+  {
+    return lines.Select(line => $"{Indentation(level)}{line}");
   }
 
   /// <summary>
@@ -506,7 +560,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
     if (expressionLines.Count > 1)
     {
       lines.Add($"{Keyword(Keywords.OFFSET)} (");
-      lines.AddRange(expressionLines.Select(line => $"{Indent()}{line}"));
+      lines.AddRange(IndentStrings(expressionLines));
       lines.Add($") {Keyword(Keywords.ROWS)}");
     }
     else
@@ -523,7 +577,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       if (fetchExpressionLines.Count > 1)
       {
         lines.Add($"{Keyword(Keywords.FETCH_NEXT)} (");
-        lines.AddRange(fetchExpressionLines.Select(line => $"{Indent()}{line}"));
+        lines.AddRange(IndentStrings(fetchExpressionLines));
         lines.Add($") {Keyword(Keywords.ROWS_ONLY)}");
       }
       else
@@ -572,7 +626,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
     ScalarExpression(orderByItem.Expression, ref expressionLines);
 
-    lines.AddRange(expressionLines.Select(line => $"{Indent()}{line}"));
+    lines.AddRange(IndentStrings(expressionLines));
     Utils.AppendToLast(
       lines,
       orderByItem.SortOrder switch
@@ -728,6 +782,13 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     switch (scalarExpression)
     {
+      case SqlAggregateFunctionCallExpression aggregateFunctionCallExpression:
+        {
+          AggregateFunctionCallExpression(aggregateFunctionCallExpression, ref lines);
+
+          break;
+        }
+
       case SqlColumnRefExpression columnRefExpression:
         {
           lines.Add(ColumnRefExpression(columnRefExpression));
@@ -756,7 +817,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
           QueryExpression(scalarSubQueryExpression.QueryExpression, ref subqueryLines);
 
           lines.Add("(");
-          lines.AddRange(subqueryLines.Select(line => $"{Indent()}{line}"));
+          lines.AddRange(IndentStrings(subqueryLines));
           lines.Add(")");
 
           break;
@@ -770,6 +831,20 @@ internal class Formatter(TransactSQLFormatterOptions options)
           break;
         }
     }
+  }
+
+  /// <summary>
+  /// Formats a scalar variable reference expression.
+  /// </summary>
+  /// <param name="scalarVariableRefExpression">
+  /// The scalar variable reference expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted scalar variable reference expression to.
+  /// </param>
+  public void ScalarVariableRefExpression(SqlScalarVariableRefExpression scalarVariableRefExpression, ref List<string> lines)
+  {
+    lines.Add(scalarVariableRefExpression.VariableName);
   }
 
   /// <summary>
@@ -795,6 +870,13 @@ internal class Formatter(TransactSQLFormatterOptions options)
       case SqlSelectStarExpression selectStarExpression:
         {
           SelectStarExpression(selectStarExpression, ref lines);
+
+          break;
+        }
+
+      case SqlSelectVariableAssignmentExpression selectVariableAssignmentExpression:
+        {
+          SelectVariableAssignmentExpression(selectVariableAssignmentExpression, ref lines);
 
           break;
         }
@@ -840,7 +922,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
     ScalarExpression(selectScalarExpression.Expression, ref expressionLines);
 
-    lines.AddRange(expressionLines.Select(line => $"{Indent()}{line}"));
+    lines.AddRange(IndentStrings(expressionLines));
 
     if (selectScalarExpression.Alias is SqlIdentifier aliasIdentifier)
     {
@@ -878,11 +960,13 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SelectStarExpression(SqlSelectStarExpression selectStarExpression, ref List<string> lines)
   {
-    lines.Add(Indent());
+    lines.Add(Indentation());
 
     if (selectStarExpression.Qualifier is SqlObjectIdentifier objectIdentifier)
     {
       ObjectIdentifier(objectIdentifier, ref lines);
+
+      Utils.AppendToLast(lines, ".");
     }
 
     Utils.AppendToLast(lines, "*");
@@ -911,6 +995,28 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a SELECT variable assignment expression.
+  /// </summary>
+  /// <param name="selectVariableAssignmentExpression">
+  /// The SELECT variable assignment expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted SELECT variable assignment expression to.
+  /// </param>
+  public void SelectVariableAssignmentExpression(SqlSelectVariableAssignmentExpression selectVariableAssignmentExpression, ref List<string> lines)
+  {
+    List<string> variableLines = [];
+
+    ScalarVariableRefExpression(selectVariableAssignmentExpression.VariableAssignment.Variable, ref variableLines);
+
+    Utils.AppendToLast(variableLines, " = ");
+
+    ScalarExpression(selectVariableAssignmentExpression.VariableAssignment.Value, ref variableLines);
+
+    lines.AddRange(IndentStrings(variableLines));
+  }
+
+  /// <summary>
   /// Formats a simple GROUP BY item.
   /// </summary>
   /// <param name="simpleGroupByItem">
@@ -925,7 +1031,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
     ScalarExpression(simpleGroupByItem.Expression, ref expressionLines);
 
-    lines.AddRange(expressionLines.Select(line => $"{Indent()}{line}"));
+    lines.AddRange(IndentStrings(expressionLines));
   }
 
   /// <summary>
@@ -956,6 +1062,8 @@ internal class Formatter(TransactSQLFormatterOptions options)
           break;
         }
     }
+
+    Utils.AppendToLast(lines, ";");
 
     // Add configured number of blank lines between statements.
     foreach (int _ in Enumerable.Range(0, Options.LinesBetweenStatements))
@@ -1023,7 +1131,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
     if (tableRefExpression.Alias is SqlIdentifier aliasIdentifier)
     {
-      lines.Add($"{Indent()}{Keyword(Keywords.AS)} {Identifier(aliasIdentifier)}");
+      lines.Add($"{Indentation()}{Keyword(Keywords.AS)} {Identifier(aliasIdentifier)}");
     }
 
     if (tableRefExpression.Hints is SqlHintCollection hintCollection)
@@ -1037,13 +1145,13 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       if (hintLines.Count > 1)
       {
-        lines.Add($"{Indent()}{Keyword(Keywords.WITH)} (");
-        lines.AddRange(hintLines.Select(line => $"{Indent()}{line}"));
-        lines.Add($"{Indent()})");
+        lines.Add($"{Indentation()}{Keyword(Keywords.WITH)} (");
+        lines.AddRange(IndentStrings(hintLines));
+        lines.Add($"{Indentation()})");
       }
       else
       {
-        lines.Add($"{Indent()}{Keyword(Keywords.WITH)} ({hintLines.First()})");
+        lines.Add($"{Indentation()}{Keyword(Keywords.WITH)} ({hintLines.First()})");
       }
     }
   }
@@ -1068,7 +1176,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
     if (topValueLines.Count > 1)
     {
       Utils.AppendToLast(lines, "(");
-      lines.AddRange(topValueLines.Select(line => $"{Indent()}{line}"));
+      lines.AddRange(IndentStrings(topValueLines));
       lines.Add(")");
     }
     else
@@ -1104,6 +1212,6 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
     BooleanExpression(whereClause.Expression, ref booleanExpressionLines);
 
-    lines.AddRange(booleanExpressionLines.Select(line => $"{Indent()}{line}"));
+    lines.AddRange(IndentStrings(booleanExpressionLines));
   }
 }
