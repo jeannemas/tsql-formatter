@@ -10,6 +10,9 @@ namespace tsql_formatter;
 /// </param>
 public class TransactSQLFormatter(TransactSQLFormatterOptions options)
 {
+  /// <summary>
+  /// The internal formatter instance.
+  /// </summary>
   private readonly Formatter Formatter = new(options);
 
   /// <summary>

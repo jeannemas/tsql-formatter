@@ -27,8 +27,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void AggregateFunctionCallExpression(SqlAggregateFunctionCallExpression aggregateFunctionCallExpression, ref List<string> lines)
   {
-    lines.Add($"{Keyword(aggregateFunctionCallExpression.FunctionName)}(");
-
+    Utils.AppendToLast(lines, $"{Keyword(aggregateFunctionCallExpression.FunctionName)}(");
     Utils.AppendToLast(lines, aggregateFunctionCallExpression.SetQuantifier switch
     {
       SqlSetQuantifier.All => $"{Keyword(Keywords.ALL)} ",
@@ -226,7 +225,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void ComparisonBooleanExpression(SqlComparisonBooleanExpression comparisonBooleanExpression, ref List<string> lines)
   {
-    List<string> leftExpressionLines = [];
+    List<string> leftExpressionLines = [string.Empty];
 
     ScalarExpression(comparisonBooleanExpression.Left, ref leftExpressionLines);
 
@@ -243,7 +242,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
     Utils.AppendToLast(lines, $" {ComparisonBooleanExpressionType(comparisonBooleanExpression.ComparisonOperator)} ");
 
-    List<string> rightExpressionLines = [];
+    List<string> rightExpressionLines = [string.Empty];
 
     ScalarExpression(comparisonBooleanExpression.Right, ref rightExpressionLines);
 
@@ -553,24 +552,15 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void OffsetFetchClause(SqlOffsetFetchClause offsetFetchClause, ref List<string> lines)
   {
-    List<string> expressionLines = [];
+    lines.Add($"{Keyword(Keywords.OFFSET)} ");
 
-    ScalarExpression(offsetFetchClause.Offset, ref expressionLines);
+    ScalarExpression(offsetFetchClause.Offset, ref lines);
 
-    if (expressionLines.Count > 1)
-    {
-      lines.Add($"{Keyword(Keywords.OFFSET)} (");
-      lines.AddRange(IndentStrings(expressionLines));
-      lines.Add($") {Keyword(Keywords.ROWS)}");
-    }
-    else
-    {
-      lines.Add($"{Keyword(Keywords.OFFSET)} {expressionLines.First()} {Keyword(Keywords.ROWS)}");
-    }
+    Utils.AppendToLast(lines, $" {Keyword(Keywords.ROWS)}");
 
     if (offsetFetchClause.Fetch is SqlScalarExpression scalarExpression)
     {
-      List<string> fetchExpressionLines = [];
+      List<string> fetchExpressionLines = [string.Empty];
 
       ScalarExpression(scalarExpression, ref fetchExpressionLines);
 
@@ -622,7 +612,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void OrderByItem(SqlOrderByItem orderByItem, ref List<string> lines)
   {
-    List<string> expressionLines = [];
+    List<string> expressionLines = [string.Empty];
 
     ScalarExpression(orderByItem.Expression, ref expressionLines);
 
@@ -791,21 +781,21 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       case SqlColumnRefExpression columnRefExpression:
         {
-          lines.Add(ColumnRefExpression(columnRefExpression));
+          Utils.AppendToLast(lines, ColumnRefExpression(columnRefExpression));
 
           break;
         }
 
       case SqlLiteralExpression literalExpression:
         {
-          lines.Add(LiteralExpression(literalExpression));
+          Utils.AppendToLast(lines, LiteralExpression(literalExpression));
 
           break;
         }
 
       case SqlScalarRefExpression scalarRefExpression:
         {
-          lines.Add(MultipartIdentifier(scalarRefExpression.MultipartIdentifier));
+          Utils.AppendToLast(lines, MultipartIdentifier(scalarRefExpression.MultipartIdentifier));
 
           break;
         }
@@ -816,7 +806,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
           QueryExpression(scalarSubQueryExpression.QueryExpression, ref subqueryLines);
 
-          lines.Add("(");
+          Utils.AppendToLast(lines, "(");
           lines.AddRange(IndentStrings(subqueryLines));
           lines.Add(")");
 
@@ -826,7 +816,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       default:
         {
           Utils.Debug($"Unrecognized scalar expression type: {scalarExpression.GetType().FullName}");
-          lines.Add(scalarExpression.Sql);
+          Utils.AppendToLast(lines, scalarExpression.Sql);
 
           break;
         }
@@ -918,7 +908,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SelectScalarExpression(SqlSelectScalarExpression selectScalarExpression, ref List<string> lines)
   {
-    List<string> expressionLines = [];
+    List<string> expressionLines = [string.Empty];
 
     ScalarExpression(selectScalarExpression.Expression, ref expressionLines);
 
@@ -1027,7 +1017,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SimpleGroupByItem(SqlSimpleGroupByItem simpleGroupByItem, ref List<string> lines)
   {
-    List<string> expressionLines = [];
+    List<string> expressionLines = [string.Empty];
 
     ScalarExpression(simpleGroupByItem.Expression, ref expressionLines);
 
@@ -1169,7 +1159,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     Utils.AppendToLast(lines, $" {Keyword(Keywords.TOP)} ");
 
-    List<string> topValueLines = [];
+    List<string> topValueLines = [string.Empty];
 
     ScalarExpression(topSpecification.Value, ref topValueLines);
 
