@@ -10,6 +10,8 @@ TransactSQLFormatterOptions options = new()
 };
 TransactSQLFormatter formatter = new(options);
 string sql = @"
+  SELECT ProductName FROM Products WHERE Price > ALL (SELECT Price FROM Products WHERE Category = 'Electronics');
+
   with cte (dada) as (
     select distinct top 2 e.e as b
     from dbo.[Employees] as e with (nolock)

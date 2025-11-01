@@ -63,7 +63,38 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void AllAnyComparisonBooleanExpression(SqlAllAnyComparisonBooleanExpression allAnyComparisonBooleanExpression, ref List<string> lines)
   {
-    lines.Add(allAnyComparisonBooleanExpression.Sql); // TODO
+    List<string> leftExpressionLines = [string.Empty];
+
+    ScalarExpression(allAnyComparisonBooleanExpression.Left, ref leftExpressionLines);
+
+    if (leftExpressionLines.Count > 1)
+    {
+      Utils.AppendToLast(lines, "(");
+      lines.AddRange(IndentStrings(leftExpressionLines));
+      lines.Add(")");
+    }
+    else
+    {
+      Utils.AppendToLast(lines, leftExpressionLines.First());
+    }
+
+    ComparisonBooleanExpressionType(allAnyComparisonBooleanExpression.ComparisonOperator, ref lines);
+    Utils.AppendToLast(lines, $"{Keyword(allAnyComparisonBooleanExpression.ComparisonType)} ");
+
+    List<string> rightExpressionLines = [string.Empty];
+
+    QueryExpression(allAnyComparisonBooleanExpression.Right, ref rightExpressionLines);
+
+    if (rightExpressionLines.Count > 1)
+    {
+      Utils.AppendToLast(lines, "(");
+      lines.AddRange(IndentStrings(rightExpressionLines));
+      lines.Add(")");
+    }
+    else
+    {
+      Utils.AppendToLast(lines, rightExpressionLines.First());
+    }
   }
 
   /// <summary>
@@ -122,26 +153,26 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void BinaryBooleanExpression(SqlBinaryBooleanExpression binaryBooleanExpression, ref List<string> lines)
   {
-    List<string> leftExpressionLines = [];
+    List<string> leftExpressionLines = [string.Empty];
 
     BooleanExpression(binaryBooleanExpression.Left, ref leftExpressionLines);
 
     if (leftExpressionLines.Count > 1)
     {
-      lines.Add("(");
+      Utils.AppendToLast(lines, "(");
       lines.AddRange(IndentStrings(leftExpressionLines));
       lines.Add(")");
     }
     else
     {
-      lines.Add(leftExpressionLines.First());
+      Utils.AppendToLast(lines, leftExpressionLines.First());
     }
 
     lines.Add(string.Empty);
     BooleanOperatorType(binaryBooleanExpression.Operator, ref lines);
     Utils.AppendToLast(lines, " ");
 
-    List<string> rightExpressionLines = [];
+    List<string> rightExpressionLines = [string.Empty];
 
     BooleanExpression(binaryBooleanExpression.Right, ref rightExpressionLines);
 
@@ -427,10 +458,10 @@ internal class Formatter(TransactSQLFormatterOptions options)
       header += $" ({string.Join(", ", columnList.Select(Identifier))}) ";
     }
 
-    List<string> cteLines = [];
+    List<string> cteLines = [string.Empty];
 
     QueryExpression(commonTableExpression.QueryExpression, ref cteLines);
-    lines.Add(header);
+    Utils.AppendToLast(lines, header);
     lines.Add($"{Keyword(Keywords.AS)} (");
     lines.AddRange(IndentStrings(cteLines));
     lines.Add(")");
@@ -453,13 +484,13 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
     if (leftExpressionLines.Count > 1)
     {
-      lines.Add("(");
+      Utils.AppendToLast(lines, "(");
       lines.AddRange(IndentStrings(leftExpressionLines));
       lines.Add(")");
     }
     else
     {
-      lines.Add(leftExpressionLines.First());
+      Utils.AppendToLast(lines, leftExpressionLines.First());
     }
 
     ComparisonBooleanExpressionType(comparisonBooleanExpression.ComparisonOperator, ref lines);
@@ -470,7 +501,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
     if (rightExpressionLines.Count > 1)
     {
-      lines.Add("(");
+      Utils.AppendToLast(lines, "(");
       lines.AddRange(IndentStrings(rightExpressionLines));
       lines.Add(")");
     }
@@ -550,7 +581,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void FromClause(SqlFromClause fromClause, ref List<string> lines)
   {
-    lines.Add($"{Keyword(Keywords.FROM)} ");
+    Utils.AppendToLast(lines, $"{Keyword(Keywords.FROM)} ");
 
     foreach (SqlTableExpression tableExpression in fromClause.TableExpressions)
     {
@@ -618,7 +649,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       GroupByItem(groupByItem, ref groupByLines);
     }
 
-    lines.Add(Keyword(Keywords.GROUP_BY));
+    Utils.AppendToLast(lines, Keyword(Keywords.GROUP_BY));
     lines.AddRange(IndentStrings(groupByLines));
   }
 
@@ -735,10 +766,10 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void HavingClause(SqlHavingClause havingClause, ref List<string> lines)
   {
-    List<string> booleanExpressionLines = [];
+    List<string> booleanExpressionLines = [string.Empty];
 
     BooleanExpression(havingClause.Expression, ref booleanExpressionLines);
-    lines.Add(Keyword(Keywords.HAVING));
+    Utils.AppendToLast(lines, Keyword(Keywords.HAVING));
     lines.AddRange(IndentStrings(booleanExpressionLines));
   }
 
@@ -1048,7 +1079,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void OffsetFetchClause(SqlOffsetFetchClause offsetFetchClause, ref List<string> lines)
   {
-    lines.Add($"{Keyword(Keywords.OFFSET)} ");
+    Utils.AppendToLast(lines, $"{Keyword(Keywords.OFFSET)} ");
     ScalarExpression(offsetFetchClause.Offset, ref lines);
     Utils.AppendToLast(lines, $" {Keyword(Keywords.ROWS)}");
 
@@ -1082,7 +1113,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void OrderByClause(SqlOrderByClause orderByClause, ref List<string> lines)
   {
-    lines.Add(Keyword(Keywords.ORDER_BY));
+    Utils.AppendToLast(lines, Keyword(Keywords.ORDER_BY));
 
     foreach (SqlOrderByItem orderByItem in orderByClause.Items)
     {
@@ -1198,31 +1229,37 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     if (querySpecification.SelectClause is SqlSelectClause selectClause)
     {
+      lines.Add(string.Empty);
       SelectClause(selectClause, ref lines);
     }
 
     if (querySpecification.IntoClause is SqlSelectIntoClause intoClause)
     {
+      lines.Add(string.Empty);
       SelectIntoClause(intoClause, ref lines);
     }
 
     if (querySpecification.FromClause is SqlFromClause fromClause)
     {
+      lines.Add(string.Empty);
       FromClause(fromClause, ref lines);
     }
 
     if (querySpecification.WhereClause is SqlWhereClause whereClause)
     {
+      lines.Add(string.Empty);
       WhereClause(whereClause, ref lines);
     }
 
     if (querySpecification.GroupByClause is SqlGroupByClause groupByClause)
     {
+      lines.Add(string.Empty);
       GroupByClause(groupByClause, ref lines);
     }
 
     if (querySpecification.HavingClause is SqlHavingClause havingClause)
     {
+      lines.Add(string.Empty);
       HavingClause(havingClause, ref lines);
     }
   }
@@ -1481,7 +1518,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void ScalarSubQueryExpression(SqlScalarSubQueryExpression scalarSubQueryExpression, ref List<string> lines)
   {
-    List<string> subqueryLines = [];
+    List<string> subqueryLines = [string.Empty];
 
     QueryExpression(scalarSubQueryExpression.QueryExpression, ref subqueryLines);
     Utils.AppendToLast(lines, "(");
@@ -1529,7 +1566,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SelectClause(SqlSelectClause selectClause, ref List<string> lines)
   {
-    lines.Add(Keyword(Keywords.SELECT));
+    Utils.AppendToLast(lines, Keyword(Keywords.SELECT));
 
     if (selectClause.IsDistinct)
     {
@@ -1609,7 +1646,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SelectIntoClause(SqlSelectIntoClause selectIntoClause, ref List<string> lines)
   {
-    lines.Add($"{Keyword(Keywords.INTO)} ");
+    Utils.AppendToLast(lines, $"{Keyword(Keywords.INTO)} ");
     ObjectIdentifier(selectIntoClause.IntoTarget, ref lines);
   }
 
@@ -1899,13 +1936,13 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       if (hintLines.Count > 1)
       {
-        lines.Add($"{Indentation()}{Keyword(Keywords.WITH)} (");
+        Utils.AppendToLast(lines, $"{Indentation()}{Keyword(Keywords.WITH)} (");
         lines.AddRange(IndentStrings(hintLines));
         lines.Add($"{Indentation()})");
       }
       else
       {
-        lines.Add($"{Indentation()}{Keyword(Keywords.WITH)} ({hintLines.First()})");
+        Utils.AppendToLast(lines, $"{Indentation()}{Keyword(Keywords.WITH)} ({hintLines.First()})");
       }
     }
   }
@@ -1921,10 +1958,9 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void TopSpecification(SqlTopSpecification topSpecification, ref List<string> lines)
   {
-    Utils.AppendToLast(lines, $" {Keyword(Keywords.TOP)} ");
-
     List<string> topValueLines = [string.Empty];
 
+    Utils.AppendToLast(lines, $" {Keyword(Keywords.TOP)} ");
     ScalarExpression(topSpecification.Value, ref topValueLines);
 
     if (topValueLines.Count > 1)
@@ -2016,9 +2052,9 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void WhereClause(SqlWhereClause whereClause, ref List<string> lines)
   {
-    List<string> booleanExpressionLines = [];
+    List<string> booleanExpressionLines = [string.Empty];
 
-    lines.Add(Keyword(Keywords.WHERE));
+    Utils.AppendToLast(lines, Keyword(Keywords.WHERE));
     BooleanExpression(whereClause.Expression, ref booleanExpressionLines);
     lines.AddRange(IndentStrings(booleanExpressionLines));
   }
