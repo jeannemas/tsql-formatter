@@ -28,12 +28,8 @@ internal class Formatter(TransactSQLFormatterOptions options)
   public void AggregateFunctionCallExpression(SqlAggregateFunctionCallExpression aggregateFunctionCallExpression, ref List<string> lines)
   {
     Utils.AppendToLast(lines, $"{Keyword(aggregateFunctionCallExpression.FunctionName)}(");
-    Utils.AppendToLast(lines, aggregateFunctionCallExpression.SetQuantifier switch
-    {
-      SqlSetQuantifier.All => $"{Keyword(Keywords.ALL)} ",
-      SqlSetQuantifier.Distinct => $"{Keyword(Keywords.DISTINCT)} ",
-      _ => string.Empty,
-    });
+    SetQuantifier(aggregateFunctionCallExpression.SetQuantifier, ref lines);
+    Utils.AppendToLast(lines, " ");
 
     if (aggregateFunctionCallExpression.IsStar)
     {
@@ -47,11 +43,38 @@ internal class Formatter(TransactSQLFormatterOptions options)
       List<string> argumentLines = [];
 
       ScalarExpression(scalarExpression, ref argumentLines);
-
       lines.AddRange(IndentStrings(argumentLines));
     }
 
     lines.Add(")");
+  }
+
+  /// <summary>
+  /// Formats an ALL/ANY comparison boolean expression.
+  /// </summary>
+  /// <param name="allAnyComparisonBooleanExpression">
+  /// The ALL/ANY comparison boolean expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted ALL/ANY comparison boolean expression to.
+  /// </param>
+  public void AllAnyComparisonBooleanExpression(SqlAllAnyComparisonBooleanExpression allAnyComparisonBooleanExpression, ref List<string> lines)
+  {
+    lines.Add(allAnyComparisonBooleanExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats an AT TIME ZONE expression.
+  /// </summary>
+  /// <param name="atTimeZoneExpression">
+  /// The AT TIME ZONE expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted AT TIME ZONE expression to.
+  /// </param>
+  public void AtTimeZoneExpression(SqlAtTimeZoneExpression atTimeZoneExpression, ref List<string> lines)
+  {
+    lines.Add(atTimeZoneExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -69,6 +92,20 @@ internal class Formatter(TransactSQLFormatterOptions options)
     {
       Statement(statement, ref lines);
     }
+  }
+
+  /// <summary>
+  /// Formats a BETWEEN boolean expression.
+  /// </summary>
+  /// <param name="betweenBooleanExpression">
+  /// The BETWEEN boolean expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted BETWEEN boolean expression to.
+  /// </param>
+  public void BetweenBooleanExpression(SqlBetweenBooleanExpression betweenBooleanExpression, ref List<string> lines)
+  {
+    lines.Add(betweenBooleanExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -97,7 +134,9 @@ internal class Formatter(TransactSQLFormatterOptions options)
       lines.Add(leftExpressionLines.First());
     }
 
-    lines.Add($"{BooleanOperatorType(binaryBooleanExpression.Operator)} ");
+    lines.Add(string.Empty);
+    BooleanOperatorType(binaryBooleanExpression.Operator, ref lines);
+    Utils.AppendToLast(lines, " ");
 
     List<string> rightExpressionLines = [];
 
@@ -116,6 +155,34 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a binary query expression.
+  /// </summary>
+  /// <param name="binaryQueryExpression">
+  /// The binary query expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted binary query expression to.
+  /// </param>
+  public void BinaryQueryExpression(SqlBinaryQueryExpression binaryQueryExpression, ref List<string> lines)
+  {
+    lines.Add(binaryQueryExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a binary scalar expression.
+  /// </summary>
+  /// <param name="binaryScalarExpression">
+  /// The binary scalar expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted binary scalar expression to.
+  /// </param>
+  public void BinaryScalarExpression(SqlBinaryScalarExpression binaryScalarExpression, ref List<string> lines)
+  {
+    lines.Add(binaryScalarExpression.Sql); // TODO
+  }
+
+  /// <summary>
   /// Formats a boolean expression.
   /// </summary>
   /// <param name="booleanExpression">
@@ -128,6 +195,20 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     switch (booleanExpression)
     {
+      case SqlAllAnyComparisonBooleanExpression allAnyComparisonBooleanExpression:
+        {
+          AllAnyComparisonBooleanExpression(allAnyComparisonBooleanExpression, ref lines);
+
+          break;
+        }
+
+      case SqlBetweenBooleanExpression betweenBooleanExpression:
+        {
+          BetweenBooleanExpression(betweenBooleanExpression, ref lines);
+
+          break;
+        }
+
       case SqlBinaryBooleanExpression binaryBooleanExpression:
         {
           BinaryBooleanExpression(binaryBooleanExpression, ref lines);
@@ -142,9 +223,59 @@ internal class Formatter(TransactSQLFormatterOptions options)
           break;
         }
 
+      case SqlExistsBooleanExpression existsBooleanExpression:
+        {
+          ExistsBooleanExpression(existsBooleanExpression, ref lines);
+
+          break;
+        }
+
+      case SqlFullTextBooleanExpression fullTextBooleanExpression:
+        {
+          FullTextBooleanExpression(fullTextBooleanExpression, ref lines);
+
+          break;
+        }
+
+      case SqlInBooleanExpression inBooleanExpression:
+        {
+          InBooleanExpression(inBooleanExpression, ref lines);
+
+          break;
+        }
+
+      case SqlIsNullBooleanExpression isNullBooleanExpression:
+        {
+          IsNullBooleanExpression(isNullBooleanExpression, ref lines);
+
+          break;
+        }
+
+      case SqlLikeBooleanExpression likeBooleanExpression:
+        {
+          LikeBooleanExpression(likeBooleanExpression, ref lines);
+
+          break;
+        }
+
+
+      case SqlNotBooleanExpression notBooleanExpression:
+        {
+          NotBooleanExpression(notBooleanExpression, ref lines);
+
+          break;
+        }
+
+      case SqlUpdateBooleanExpression updateBooleanExpression:
+        {
+          UpdateBooleanExpression(updateBooleanExpression, ref lines);
+
+          break;
+        }
+
       default:
         {
-          Utils.Debug($"Unrecognized boolean expression type: {booleanExpression.GetType().FullName}");
+          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlBooleanExpression), booleanExpression.GetType().FullName);
           lines.Add(booleanExpression.Sql);
 
           break;
@@ -158,17 +289,105 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// <param name="booleanOperatorType">
   /// The boolean operator type to format.
   /// </param>
-  /// <returns>
-  /// The formatted boolean operator type.
-  /// </returns>
-  public string BooleanOperatorType(SqlBooleanOperatorType booleanOperatorType)
+  /// <param name="lines">
+  /// The lines to append the formatted boolean operator type to.
+  /// </param>
+  public void BooleanOperatorType(SqlBooleanOperatorType booleanOperatorType, ref List<string> lines)
   {
-    return booleanOperatorType switch
+    string op = booleanOperatorType switch
     {
       SqlBooleanOperatorType.And => Keyword(Keywords.AND),
       SqlBooleanOperatorType.Or => Keyword(Keywords.OR),
-      _ => string.Empty,
+      _ => booleanOperatorType.ToString(),
     };
+
+    Utils.AppendToLast(lines, op);
+  }
+
+  /// <summary>
+  /// Formats a built-in scalar function call expression.
+  /// </summary>
+  /// <param name="builtinScalarFunctionCallExpression">
+  /// The built-in scalar function call expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted built-in scalar function call expression to.
+  /// </param>
+  public void BuiltinScalarFunctionCallExpression(SqlBuiltinScalarFunctionCallExpression builtinScalarFunctionCallExpression, ref List<string> lines)
+  {
+    switch (builtinScalarFunctionCallExpression)
+    {
+      case SqlAggregateFunctionCallExpression aggregateFunctionCallExpression:
+        {
+          AggregateFunctionCallExpression(aggregateFunctionCallExpression, ref lines);
+
+          break;
+        }
+
+      case SqlCastExpression castExpression:
+        {
+          CastExpression(castExpression, ref lines);
+
+          break;
+        }
+
+      case SqlIdentityFunctionCallExpression identityFunctionCallExpression:
+        {
+          IdentityFunctionCallExpression(identityFunctionCallExpression, ref lines);
+
+          break;
+        }
+
+      default:
+        {
+          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlBuiltinScalarFunctionCallExpression), builtinScalarFunctionCallExpression.GetType().FullName);
+          lines.Add(builtinScalarFunctionCallExpression.Sql);
+
+          break;
+        }
+    }
+  }
+
+  /// <summary>
+  /// Formats a CASE expression.
+  /// </summary>
+  /// <param name="caseExpression">
+  /// The CASE expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted CASE expression to.
+  /// </param>
+  public void CaseExpression(SqlCaseExpression caseExpression, ref List<string> lines)
+  {
+    lines.Add(caseExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a CAST expression.
+  /// </summary>
+  /// <param name="castExpression">
+  /// The CAST expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted CAST expression to.
+  /// </param>
+  public void CastExpression(SqlCastExpression castExpression, ref List<string> lines)
+  {
+    lines.Add(castExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a COLLATE scalar expression.
+  /// </summary>
+  /// <param name="collateScalarExpression">
+  /// The COLLATE scalar expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted COLLATE scalar expression to.
+  /// </param>
+  public void CollateScalarExpression(SqlCollateScalarExpression collateScalarExpression, ref List<string> lines)
+  {
+    lines.Add(collateScalarExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -177,12 +396,14 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// <param name="columnRefExpression">
   /// The column reference expression to format.
   /// </param>
-  /// <returns>
-  /// The formatted column reference expression.
-  /// </returns>
-  public string ColumnRefExpression(SqlColumnRefExpression columnRefExpression)
+  /// <param name="lines">
+  /// The lines to append the formatted column reference expression to.
+  /// </param>
+  public void ColumnRefExpression(SqlColumnRefExpression columnRefExpression, ref List<string> lines)
   {
-    return Identifier(columnRefExpression.ColumnName);
+    string identifier = Identifier(columnRefExpression.ColumnName);
+
+    Utils.AppendToLast(lines, identifier);
   }
 
   /// <summary>
@@ -206,7 +427,6 @@ internal class Formatter(TransactSQLFormatterOptions options)
     List<string> cteLines = [];
 
     QueryExpression(commonTableExpression.QueryExpression, ref cteLines);
-
     lines.Add(header);
     lines.Add($"{Keyword(Keywords.AS)} (");
     lines.AddRange(IndentStrings(cteLines));
@@ -239,7 +459,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       lines.Add(leftExpressionLines.First());
     }
 
-    Utils.AppendToLast(lines, ComparisonBooleanExpressionType(comparisonBooleanExpression.ComparisonOperator));
+    ComparisonBooleanExpressionType(comparisonBooleanExpression.ComparisonOperator, ref lines);
 
     List<string> rightExpressionLines = [string.Empty];
 
@@ -263,13 +483,11 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// <param name="comparisonType">
   /// The comparison type to format.
   /// </param>
-  /// <returns>
-  /// The formatted comparison type.
-  /// </returns>
-  public string ComparisonBooleanExpressionType(SqlComparisonBooleanExpressionType comparisonType)
+  /// <param name="lines">
+  /// The lines to append the formatted comparison type to.
+  /// </param>
+  public void ComparisonBooleanExpressionType(SqlComparisonBooleanExpressionType comparisonType, ref List<string> lines)
   {
-    Console.WriteLine("ComparisonBooleanExpressionType: {0}, spacing={1}", comparisonType, Options.OperatorSpacing);
-
     string op = comparisonType switch
     {
       SqlComparisonBooleanExpressionType.Equals => "=",
@@ -278,26 +496,44 @@ internal class Formatter(TransactSQLFormatterOptions options)
       SqlComparisonBooleanExpressionType.GreaterThanOrEqual => ">=",
       SqlComparisonBooleanExpressionType.LessThanOrEqual => "<=",
       SqlComparisonBooleanExpressionType.NotEqual => "<>",
-      _ => string.Empty,
+      _ => comparisonType.ToString(),
+    };
+    string formatted = Options.OperatorSpacing switch
+    {
+      TransactSQLFormatterOptions.OperatorSpacings.Dense => op,
+      TransactSQLFormatterOptions.OperatorSpacings.SpaceAround => $" {op} ",
+      _ => op,
     };
 
-    switch (Options.OperatorSpacing)
-    {
-      case TransactSQLFormatterOptions.OperatorSpacings.Dense:
-        {
-          return op;
-        }
+    Utils.AppendToLast(lines, formatted);
+  }
 
-      case TransactSQLFormatterOptions.OperatorSpacings.SpaceAround:
-        {
-          return $" {op} ";
-        }
+  /// <summary>
+  /// Formats a CUBE GROUP BY item.
+  /// </summary>
+  /// <param name="cubeGroupByItem">
+  /// The CUBE GROUP BY item to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted CUBE GROUP BY item to.
+  /// </param>
+  public void CubeGroupByItem(SqlCubeGroupByItem cubeGroupByItem, ref List<string> lines)
+  {
+    lines.Add(cubeGroupByItem.Sql); // TODO
+  }
 
-      default:
-        {
-          return op;
-        }
-    }
+  /// <summary>
+  /// Formats an EXISTS boolean expression.
+  /// </summary>
+  /// <param name="existsBooleanExpression">
+  /// The EXISTS boolean expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted EXISTS boolean expression to.
+  /// </param>
+  public void ExistsBooleanExpression(SqlExistsBooleanExpression existsBooleanExpression, ref List<string> lines)
+  {
+    lines.Add(existsBooleanExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -317,6 +553,48 @@ internal class Formatter(TransactSQLFormatterOptions options)
     {
       TableExpression(tableExpression, ref lines);
     }
+  }
+
+  /// <summary>
+  /// Formats a FULLTEXT boolean expression.
+  /// </summary>
+  /// <param name="fullTextBooleanExpression">
+  /// The FULLTEXT boolean expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted FULLTEXT boolean expression to.
+  /// </param>
+  public void FullTextBooleanExpression(SqlFullTextBooleanExpression fullTextBooleanExpression, ref List<string> lines)
+  {
+    lines.Add(fullTextBooleanExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a global scalar variable reference expression.
+  /// </summary>
+  /// <param name="globalScalarVariableRefExpression">
+  /// The global scalar variable reference expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted global scalar variable reference expression to.
+  /// </param>
+  public void GlobalScalarVariableRefExpression(SqlGlobalScalarVariableRefExpression globalScalarVariableRefExpression, ref List<string> lines)
+  {
+    lines.Add(globalScalarVariableRefExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a GRAND TOTAL GROUP BY item.
+  /// </summary>
+  /// <param name="grandTotalGroupByItem">
+  /// The GRAND TOTAL GROUP BY item to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted GRAND TOTAL GROUP BY item to.
+  /// </param>
+  public void GrandTotalGroupByItem(SqlGrandTotalGroupByItem grandTotalGroupByItem, ref List<string> lines)
+  {
+    lines.Add(grandTotalGroupByItem.Sql); // TODO
   }
 
   /// <summary>
@@ -354,6 +632,78 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     switch (groupByItem)
     {
+      case SqlGrandTotalGroupByItem grandTotalGroupByItem:
+        {
+          GrandTotalGroupByItem(grandTotalGroupByItem, ref lines);
+
+          break;
+        }
+
+      case SqlGroupBySets groupBySets:
+        {
+          GroupBySets(groupBySets, ref lines);
+
+          break;
+        }
+
+      case SqlGroupingSetItem groupingSetItem:
+        {
+          GroupingSetItem(groupingSetItem, ref lines);
+
+          break;
+        }
+
+      default:
+        {
+          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlGroupByItem), groupByItem.GetType().FullName);
+          lines.Add(groupByItem.Sql);
+
+          break;
+        }
+    }
+  }
+
+  /// <summary>
+  /// Formats a GROUP BY sets item.
+  /// </summary>
+  /// <param name="groupBySets">
+  /// The GROUP BY sets item to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted GROUP BY sets item to.
+  /// </param>
+  public void GroupBySets(SqlGroupBySets groupBySets, ref List<string> lines)
+  {
+    lines.Add(groupBySets.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a grouping set item.
+  /// </summary>
+  /// <param name="groupingSetItem">
+  /// The grouping set item to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted grouping set item to.
+  /// </param>
+  public void GroupingSetItem(SqlGroupingSetItem groupingSetItem, ref List<string> lines)
+  {
+    switch (groupingSetItem)
+    {
+      case SqlCubeGroupByItem cubeGroupByItem:
+        {
+          CubeGroupByItem(cubeGroupByItem, ref lines);
+
+          break;
+        }
+
+      case SqlRollupGroupByItem rollupGroupByItem:
+        {
+          RollupGroupByItem(rollupGroupByItem, ref lines);
+
+          break;
+        }
+
       case SqlSimpleGroupByItem simpleGroupByItem:
         {
           SimpleGroupByItem(simpleGroupByItem, ref lines);
@@ -363,8 +713,8 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug($"Unrecognized GROUP BY item type: {groupByItem.GetType().FullName}");
-          lines.Add(groupByItem.Sql);
+          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlGroupingSetItem), groupingSetItem.GetType().FullName);
+          lines.Add(groupingSetItem.Sql);
 
           break;
         }
@@ -385,7 +735,6 @@ internal class Formatter(TransactSQLFormatterOptions options)
     List<string> booleanExpressionLines = [];
 
     BooleanExpression(havingClause.Expression, ref booleanExpressionLines);
-
     lines.Add(Keyword(Keywords.HAVING));
     lines.AddRange(IndentStrings(booleanExpressionLines));
   }
@@ -403,6 +752,13 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     switch (hint)
     {
+      case SqlIndexHint indexHint:
+        {
+          IndexHint(indexHint, ref lines);
+
+          break;
+        }
+
       case SqlTableHint tableHint:
         {
           TableHint(tableHint, ref lines);
@@ -412,7 +768,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug($"Unrecognized hint type: {hint.GetType().FullName}");
+          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlHint), hint.GetType().FullName);
           lines.Add(hint.Sql);
 
           break;
@@ -455,6 +811,34 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats an IDENTITY function call expression.
+  /// </summary>
+  /// <param name="identityFunctionCallExpression">
+  /// The IDENTITY function call expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted IDENTITY function call expression to.
+  /// </param>
+  public void IdentityFunctionCallExpression(SqlIdentityFunctionCallExpression identityFunctionCallExpression, ref List<string> lines)
+  {
+    lines.Add(identityFunctionCallExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats an IN boolean expression.
+  /// </summary>
+  /// <param name="inBooleanExpression">
+  /// The IN boolean expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted IN boolean expression to.
+  /// </param>
+  public void InBooleanExpression(SqlInBooleanExpression inBooleanExpression, ref List<string> lines)
+  {
+    lines.Add(inBooleanExpression.Sql); // TODO
+  }
+
+  /// <summary>
   /// Generates an indentation string for the specified level.
   /// </summary>
   /// <param name="level">
@@ -486,6 +870,34 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats an INDEX hint.
+  /// </summary>
+  /// <param name="indexHint">
+  /// The INDEX hint to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted INDEX hint to.
+  /// </param>
+  public void IndexHint(SqlIndexHint indexHint, ref List<string> lines)
+  {
+    lines.Add(indexHint.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats an IS NULL boolean expression.
+  /// </summary>
+  /// <param name="isNullBooleanExpression">
+  /// The IS NULL boolean expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted IS NULL boolean expression to.
+  /// </param>
+  public void IsNullBooleanExpression(SqlIsNullBooleanExpression isNullBooleanExpression, ref List<string> lines)
+  {
+    lines.Add(isNullBooleanExpression.Sql); // TODO
+  }
+
+  /// <summary>
   /// Formats a keyword according to the configured casing.
   /// </summary>
   /// <param name="keyword">
@@ -505,17 +917,31 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a LIKE boolean expression.
+  /// </summary>
+  /// <param name="likeBooleanExpression">
+  /// The LIKE boolean expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted LIKE boolean expression to.
+  /// </param>
+  public void LikeBooleanExpression(SqlLikeBooleanExpression likeBooleanExpression, ref List<string> lines)
+  {
+    lines.Add(likeBooleanExpression.Sql); // TODO
+  }
+
+  /// <summary>
   /// Formats a literal expression.
   /// </summary>
   /// <param name="literalExpression">
   /// The literal expression to format.
   /// </param>
-  /// <returns>
-  /// The formatted literal expression.
-  /// </returns>
-  public string LiteralExpression(SqlLiteralExpression literalExpression)
+  /// <param name="lines">
+  /// The lines to append the formatted literal expression to.
+  /// </param>
+  public void LiteralExpression(SqlLiteralExpression literalExpression, ref List<string> lines)
   {
-    return literalExpression.Type switch
+    string expression = literalExpression.Type switch
     {
       LiteralValueType.Default => Keyword(Keywords.DEFAULT),
       LiteralValueType.Identifier => Identifier(literalExpression.Value),
@@ -524,20 +950,50 @@ internal class Formatter(TransactSQLFormatterOptions options)
       LiteralValueType.UnicodeString => $"N'{literalExpression.Value.Replace("'", "''")}'",
       _ => literalExpression.Value,
     };
+
+    Utils.AppendToLast(lines, expression);
   }
 
   /// <summary>
-  /// Formats a multipart identifier.
+  /// Formats a NOT boolean expression.
   /// </summary>
-  /// <param name="multipartIdentifier">
-  /// The multipart identifier to format.
+  /// <param name="notBooleanExpression">
+  /// The NOT boolean expression to format.
   /// </param>
-  /// <returns>
-  /// The formatted multipart identifier.
-  /// </returns>
-  public string MultipartIdentifier(SqlMultipartIdentifier multipartIdentifier)
+  /// <param name="lines">
+  /// The lines to append the formatted NOT boolean expression to.
+  /// </param>
+  public void NotBooleanExpression(SqlNotBooleanExpression notBooleanExpression, ref List<string> lines)
   {
-    return string.Join(".", multipartIdentifier.Select(Identifier));
+    lines.Add(notBooleanExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a NULL query expression.
+  /// </summary>
+  /// <param name="nullQueryExpression">
+  /// The NULL query expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted NULL query expression to.
+  /// </param>
+  public void NullQueryExpression(SqlNullQueryExpression nullQueryExpression, ref List<string> lines)
+  {
+    lines.Add(nullQueryExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a NULL scalar expression.
+  /// </summary>
+  /// <param name="nullScalarExpression">
+  /// The NULL scalar expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted NULL scalar expression to.
+  /// </param>
+  public void NullScalarExpression(SqlNullScalarExpression nullScalarExpression, ref List<string> lines)
+  {
+    lines.Add(nullScalarExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -558,7 +1014,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       objectIdentifier.SchemaName,
       objectIdentifier.ObjectName
     }
-      .Where(section => section != null && !string.IsNullOrWhiteSpace(section.Value))
+      .Where(section => !string.IsNullOrWhiteSpace(section?.Value))
       .Select(section => Identifier(section!));
 
     Utils.AppendToLast(lines, $"{string.Join(".", sections)}");
@@ -576,9 +1032,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   public void OffsetFetchClause(SqlOffsetFetchClause offsetFetchClause, ref List<string> lines)
   {
     lines.Add($"{Keyword(Keywords.OFFSET)} ");
-
     ScalarExpression(offsetFetchClause.Offset, ref lines);
-
     Utils.AppendToLast(lines, $" {Keyword(Keywords.ROWS)}");
 
     if (offsetFetchClause.Fetch is SqlScalarExpression scalarExpression)
@@ -638,16 +1092,8 @@ internal class Formatter(TransactSQLFormatterOptions options)
     List<string> expressionLines = [string.Empty];
 
     ScalarExpression(orderByItem.Expression, ref expressionLines);
-
     lines.AddRange(IndentStrings(expressionLines));
-    Utils.AppendToLast(
-      lines,
-      orderByItem.SortOrder switch
-      {
-        SqlSortOrder.Ascending => $" {Keyword(Keywords.ASC)}",
-        SqlSortOrder.Descending => $" {Keyword(Keywords.DESC)}",
-        _ => string.Empty,
-      });
+    SortOrder(orderByItem.SortOrder, ref lines);
   }
 
   /// <summary>
@@ -684,6 +1130,20 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     switch (queryExpression)
     {
+      case SqlBinaryQueryExpression binaryQueryExpression:
+        {
+          BinaryQueryExpression(binaryQueryExpression, ref lines);
+
+          break;
+        }
+
+      case SqlNullQueryExpression nullQueryExpression:
+        {
+          NullQueryExpression(nullQueryExpression, ref lines);
+
+          break;
+        }
+
       case SqlQuerySpecification querySpecification:
         {
           QuerySpecification(querySpecification, ref lines);
@@ -691,9 +1151,16 @@ internal class Formatter(TransactSQLFormatterOptions options)
           break;
         }
 
+      case SqlTableConstructorExpression tableConstructorExpression:
+        {
+          TableConstructorExpression(tableConstructorExpression, ref lines);
+
+          break;
+        }
+
       default:
         {
-          Utils.Debug($"Unrecognized query expression type: {queryExpression.GetType().FullName}");
+          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlQueryExpression), queryExpression.GetType().FullName);
           lines.Add(queryExpression.Sql);
 
           break;
@@ -714,29 +1181,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     if (querySpecification.SelectClause is SqlSelectClause selectClause)
     {
-      lines.Add(Keyword(Keywords.SELECT));
-
-      if (selectClause.IsDistinct)
-      {
-        Utils.AppendToLast(lines, $" {Keyword(Keywords.DISTINCT)}");
-      }
-
-      if (selectClause.Top is SqlTopSpecification topSpecification)
-      {
-        TopSpecification(topSpecification, ref lines);
-      }
-
-      for (int selectExpressionIndex = 0; selectExpressionIndex < selectClause.SelectExpressions.Count; selectExpressionIndex += 1)
-      {
-        SqlSelectExpression selectExpression = selectClause.SelectExpressions[selectExpressionIndex];
-
-        SelectExpression(selectExpression, ref lines);
-
-        if (selectExpressionIndex < selectClause.SelectExpressions.Count - 1)
-        {
-          Utils.AppendToLast(lines, ",");
-        }
-      }
+      SelectClause(selectClause, ref lines);
     }
 
     if (querySpecification.IntoClause is SqlSelectIntoClause intoClause)
@@ -783,6 +1228,41 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a ROLLUP GROUP BY item.
+  /// </summary>
+  /// <param name="rollupGroupByItem">
+  /// The ROLLUP GROUP BY item to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted ROLLUP GROUP BY item to.
+  /// </param>
+  public void RollupGroupByItem(SqlRollupGroupByItem rollupGroupByItem, ref List<string> lines)
+  {
+    lines.Add(rollupGroupByItem.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a set quantifier.
+  /// </summary>
+  /// <param name="setQuantifier">
+  /// The set quantifier to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted set quantifier to.
+  /// </param>
+  public void SetQuantifier(SqlSetQuantifier setQuantifier, ref List<string> lines)
+  {
+    string value = setQuantifier switch
+    {
+      SqlSetQuantifier.All => Keyword(Keywords.ALL),
+      SqlSetQuantifier.Distinct => Keyword(Keywords.DISTINCT),
+      _ => setQuantifier.ToString(),
+    };
+
+    Utils.AppendToLast(lines, value);
+  }
+
+  /// <summary>
   /// Formats a scalar expression.
   /// </summary>
   /// <param name="scalarExpression">
@@ -795,54 +1275,262 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     switch (scalarExpression)
     {
-      case SqlAggregateFunctionCallExpression aggregateFunctionCallExpression:
+      case SqlAtTimeZoneExpression atTimeZoneExpression:
         {
-          AggregateFunctionCallExpression(aggregateFunctionCallExpression, ref lines);
+          AtTimeZoneExpression(atTimeZoneExpression, ref lines);
 
           break;
         }
 
-      case SqlColumnRefExpression columnRefExpression:
+      case SqlBinaryScalarExpression binaryScalarExpression:
         {
-          Utils.AppendToLast(lines, ColumnRefExpression(columnRefExpression));
+          BinaryScalarExpression(binaryScalarExpression, ref lines);
+
+          break;
+        }
+
+      case SqlCaseExpression caseExpression:
+        {
+          CaseExpression(caseExpression, ref lines);
+
+          break;
+        }
+
+      case SqlCollateScalarExpression collateScalarExpression:
+        {
+          CollateScalarExpression(collateScalarExpression, ref lines);
+
+          break;
+        }
+
+      case SqlGlobalScalarVariableRefExpression globalScalarVariableRefExpression:
+        {
+          GlobalScalarVariableRefExpression(globalScalarVariableRefExpression, ref lines);
 
           break;
         }
 
       case SqlLiteralExpression literalExpression:
         {
-          Utils.AppendToLast(lines, LiteralExpression(literalExpression));
+          LiteralExpression(literalExpression, ref lines);
+
+          break;
+        }
+
+      case SqlNullScalarExpression nullScalarExpression:
+        {
+          NullScalarExpression(nullScalarExpression, ref lines);
+
+          break;
+        }
+
+      case SqlScalarFunctionCallExpression scalarFunctionCallExpression:
+        {
+          ScalarFunctionCallExpression(scalarFunctionCallExpression, ref lines);
 
           break;
         }
 
       case SqlScalarRefExpression scalarRefExpression:
         {
-          Utils.AppendToLast(lines, MultipartIdentifier(scalarRefExpression.MultipartIdentifier));
+          ScalarRefExpression(scalarRefExpression, ref lines);
 
           break;
         }
 
       case SqlScalarSubQueryExpression scalarSubQueryExpression:
         {
-          List<string> subqueryLines = [];
+          ScalarSubQueryExpression(scalarSubQueryExpression, ref lines);
 
-          QueryExpression(scalarSubQueryExpression.QueryExpression, ref subqueryLines);
+          break;
+        }
 
-          Utils.AppendToLast(lines, "(");
-          lines.AddRange(IndentStrings(subqueryLines));
-          lines.Add(")");
+      case SqlScalarVariableRefExpression scalarVariableRefExpression:
+        {
+          ScalarVariableRefExpression(scalarVariableRefExpression, ref lines);
+
+          break;
+        }
+
+      case SqlSearchedWhenClause searchedWhenClause:
+        {
+          SearchedWhenClause(searchedWhenClause, ref lines);
+
+          break;
+        }
+
+      case SqlUdtMemberExpression udtMemberExpression:
+        {
+          UdtMemberExpression(udtMemberExpression, ref lines);
+
+          break;
+        }
+
+      case SqlUnaryScalarExpression unaryScalarExpression:
+        {
+          UnaryScalarExpression(unaryScalarExpression, ref lines);
 
           break;
         }
 
       default:
         {
-          Utils.Debug($"Unrecognized scalar expression type: {scalarExpression.GetType().FullName}");
+          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlScalarExpression), scalarExpression.GetType().FullName);
           Utils.AppendToLast(lines, scalarExpression.Sql);
 
           break;
         }
+    }
+  }
+
+  /// <summary>
+  /// Formats a scalar function call expression.
+  /// </summary>
+  /// <param name="scalarFunctionCallExpression">
+  /// The scalar function call expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted scalar function call expression to.
+  /// </param>
+  public void ScalarFunctionCallExpression(SqlScalarFunctionCallExpression scalarFunctionCallExpression, ref List<string> lines)
+  {
+    switch (scalarFunctionCallExpression)
+    {
+      case SqlBuiltinScalarFunctionCallExpression builtinScalarFunctionCallExpression:
+        {
+          BuiltinScalarFunctionCallExpression(builtinScalarFunctionCallExpression, ref lines);
+
+          break;
+        }
+
+      case SqlUserDefinedScalarFunctionCallExpression userDefinedScalarFunctionCallExpression:
+        {
+          UserDefinedScalarFunctionCallExpression(userDefinedScalarFunctionCallExpression, ref lines);
+
+          break;
+        }
+
+      default:
+        {
+          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlScalarFunctionCallExpression), scalarFunctionCallExpression.GetType().FullName);
+          lines.Add(scalarFunctionCallExpression.Sql);
+
+          break;
+        }
+    }
+  }
+
+  /// <summary>
+  /// Formats a scalar reference expression.
+  /// </summary>
+  /// <param name="scalarRefExpression">
+  /// The scalar reference expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted scalar reference expression to.
+  /// </param>
+  public void ScalarRefExpression(SqlScalarRefExpression scalarRefExpression, ref List<string> lines)
+  {
+    switch (scalarRefExpression)
+    {
+      case SqlColumnRefExpression columnRefExpression:
+        {
+          ColumnRefExpression(columnRefExpression, ref lines);
+
+          break;
+        }
+
+      default:
+        {
+          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlScalarRefExpression), scalarRefExpression.GetType().FullName);
+          lines.Add(scalarRefExpression.Sql);
+
+          break;
+        }
+    }
+  }
+
+  /// <summary>
+  /// Formats a scalar sub-query expression.
+  /// </summary>
+  /// <param name="scalarSubQueryExpression">
+  /// The scalar sub-query expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted scalar sub-query expression to.
+  /// </param>
+  public void ScalarSubQueryExpression(SqlScalarSubQueryExpression scalarSubQueryExpression, ref List<string> lines)
+  {
+    List<string> subqueryLines = [];
+
+    QueryExpression(scalarSubQueryExpression.QueryExpression, ref subqueryLines);
+    Utils.AppendToLast(lines, "(");
+    lines.AddRange(IndentStrings(subqueryLines));
+    lines.Add(")");
+
+  }
+
+  /// <summary>
+  /// Formats a scalar variable reference expression.
+  /// </summary>
+  /// <param name="scalarVariableRefExpression">
+  /// The scalar variable reference expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted scalar variable reference expression to.
+  /// </param>
+  public void ScalarVariableRefExpression(SqlScalarVariableRefExpression scalarVariableRefExpression, ref List<string> lines)
+  {
+    lines.Add(scalarVariableRefExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a searched WHEN clause.
+  /// </summary>
+  /// <param name="searchedWhenClause">
+  /// The searched WHEN clause to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted searched WHEN clause to.
+  /// </param>
+  public void SearchedWhenClause(SqlSearchedWhenClause searchedWhenClause, ref List<string> lines)
+  {
+    lines.Add(searchedWhenClause.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a SELECT clause.
+  /// </summary>
+  /// <param name="selectClause">
+  /// The select clause to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted select clause to.
+  /// </param>
+  public void SelectClause(SqlSelectClause selectClause, ref List<string> lines)
+  {
+    lines.Add(Keyword(Keywords.SELECT));
+
+    if (selectClause.IsDistinct)
+    {
+      Utils.AppendToLast(lines, $" {Keyword(Keywords.DISTINCT)}");
+    }
+
+    if (selectClause.Top is SqlTopSpecification topSpecification)
+    {
+      TopSpecification(topSpecification, ref lines);
+    }
+
+    for (int selectExpressionIndex = 0; selectExpressionIndex < selectClause.SelectExpressions.Count; selectExpressionIndex += 1)
+    {
+      SqlSelectExpression selectExpression = selectClause.SelectExpressions[selectExpressionIndex];
+
+      SelectExpression(selectExpression, ref lines);
+
+      if (selectExpressionIndex < selectClause.SelectExpressions.Count - 1)
+      {
+        Utils.AppendToLast(lines, ",");
+      }
     }
   }
 
@@ -882,7 +1570,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug($"Unrecognized select expression type: {selectExpression.GetType().FullName}");
+          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlSelectExpression), selectExpression.GetType().FullName);
           lines.Add(selectExpression.Sql);
 
           break;
@@ -902,7 +1590,6 @@ internal class Formatter(TransactSQLFormatterOptions options)
   public void SelectIntoClause(SqlSelectIntoClause selectIntoClause, ref List<string> lines)
   {
     lines.Add($"{Keyword(Keywords.INTO)} ");
-
     ObjectIdentifier(selectIntoClause.IntoTarget, ref lines);
   }
 
@@ -920,7 +1607,6 @@ internal class Formatter(TransactSQLFormatterOptions options)
     List<string> expressionLines = [string.Empty];
 
     ScalarExpression(selectScalarExpression.Expression, ref expressionLines);
-
     lines.AddRange(IndentStrings(expressionLines));
 
     if (selectScalarExpression.Alias is SqlIdentifier aliasIdentifier)
@@ -964,7 +1650,6 @@ internal class Formatter(TransactSQLFormatterOptions options)
     if (selectStarExpression.Qualifier is SqlObjectIdentifier objectIdentifier)
     {
       ObjectIdentifier(objectIdentifier, ref lines);
-
       Utils.AppendToLast(lines, ".");
     }
 
@@ -1006,10 +1691,8 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     List<string> variableLines = [selectVariableAssignmentExpression.VariableAssignment.Variable.VariableName];
 
-    Utils.AppendToLast(variableLines, ComparisonBooleanExpressionType(SqlComparisonBooleanExpressionType.Equals));
-
+    ComparisonBooleanExpressionType(SqlComparisonBooleanExpressionType.Equals, ref variableLines);
     ScalarExpression(selectVariableAssignmentExpression.VariableAssignment.Value, ref variableLines);
-
     lines.AddRange(IndentStrings(variableLines));
   }
 
@@ -1025,6 +1708,27 @@ internal class Formatter(TransactSQLFormatterOptions options)
   public void SimpleGroupByItem(SqlSimpleGroupByItem simpleGroupByItem, ref List<string> lines)
   {
     ScalarExpression(simpleGroupByItem.Expression, ref lines);
+  }
+
+  /// <summary>
+  /// Formats a sort order.
+  /// </summary>
+  /// <param name="sortOrder">
+  /// The sort order to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted sort order to.
+  /// </param>
+  public void SortOrder(SqlSortOrder sortOrder, ref List<string> lines)
+  {
+    string value = sortOrder switch
+    {
+      SqlSortOrder.Ascending => Keyword(Keywords.ASC),
+      SqlSortOrder.Descending => Keyword(Keywords.DESC),
+      _ => sortOrder.ToString(),
+    };
+
+    Utils.AppendToLast(lines, value);
   }
 
   /// <summary>
@@ -1049,7 +1753,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug($"Unrecognized statement type: {statement.GetType().FullName}");
+          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlStatement), statement.GetType().FullName);
           lines.Add(statement.Sql);
 
           break;
@@ -1063,6 +1767,20 @@ internal class Formatter(TransactSQLFormatterOptions options)
     {
       lines.Add(string.Empty);
     }
+  }
+
+  /// <summary>
+  /// Formats a table constructor expression.
+  /// </summary>
+  /// <param name="tableConstructorExpression">
+  /// The table constructor expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted table constructor expression to.
+  /// </param>
+  public void TableConstructorExpression(SqlTableConstructorExpression tableConstructorExpression, ref List<string> lines)
+  {
+    lines.Add(tableConstructorExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -1087,7 +1805,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug($"Unrecognized table expression type: {tableExpression.GetType().FullName}");
+          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlTableExpression), tableExpression.GetType().FullName);
           lines.Add(tableExpression.Sql);
 
           break;
@@ -1106,7 +1824,28 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void TableHint(SqlTableHint tableHint, ref List<string> lines)
   {
-    lines.Add(Keyword(tableHint.Type.ToString()));
+    lines.Add(string.Empty);
+    TableHintType(tableHint.Type, ref lines);
+  }
+
+  /// <summary>
+  /// Formats a table hint type.
+  /// </summary>
+  /// <param name="tableHintType">
+  /// The table hint type to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted table hint type to.
+  /// </param>
+  public void TableHintType(SqlTableHintType tableHintType, ref List<string> lines)
+  {
+    string raw = tableHintType switch
+    {
+      _ => tableHintType.ToString(),
+    };
+    string value = Keyword(raw);
+
+    Utils.AppendToLast(lines, value);
   }
 
   /// <summary>
@@ -1189,6 +1928,62 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a UDT member expression.
+  /// </summary>
+  /// <param name="udtMemberExpression">
+  /// The UDT member expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted UDT member expression to.
+  /// </param>
+  public void UdtMemberExpression(SqlUdtMemberExpression udtMemberExpression, ref List<string> lines)
+  {
+    lines.Add(udtMemberExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a unary scalar expression.
+  /// </summary>
+  /// <param name="unaryScalarExpression">
+  /// The unary scalar expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted unary scalar expression to.
+  /// </param>
+  public void UnaryScalarExpression(SqlUnaryScalarExpression unaryScalarExpression, ref List<string> lines)
+  {
+    lines.Add(unaryScalarExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats an UPDATE boolean expression.
+  /// </summary>
+  /// <param name="updateBooleanExpression">
+  /// The UPDATE boolean expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted UPDATE boolean expression to.
+  /// </param>
+  public void UpdateBooleanExpression(SqlUpdateBooleanExpression updateBooleanExpression, ref List<string> lines)
+  {
+    lines.Add(updateBooleanExpression.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a user-defined scalar function call expression.
+  /// </summary>
+  /// <param name="userDefinedScalarFunctionCallExpression">
+  /// The user-defined scalar function call expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted user-defined scalar function call expression to.
+  /// </param>
+  public void UserDefinedScalarFunctionCallExpression(SqlUserDefinedScalarFunctionCallExpression userDefinedScalarFunctionCallExpression, ref List<string> lines)
+  {
+    lines.Add(userDefinedScalarFunctionCallExpression.Sql); // TODO
+  }
+
+  /// <summary>
   /// Formats a WHERE clause.
   /// </summary>
   /// <param name="whereClause">
@@ -1199,12 +1994,10 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void WhereClause(SqlWhereClause whereClause, ref List<string> lines)
   {
-    lines.Add(Keyword(Keywords.WHERE));
-
     List<string> booleanExpressionLines = [];
 
+    lines.Add(Keyword(Keywords.WHERE));
     BooleanExpression(whereClause.Expression, ref booleanExpressionLines);
-
     lines.AddRange(IndentStrings(booleanExpressionLines));
   }
 }

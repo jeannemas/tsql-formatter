@@ -35,10 +35,13 @@ internal class Utils
   /// <param name="message">
   /// The debug message.
   /// </param>
-  public static void Debug(string message)
+  /// <param name="args">
+  /// The debug message arguments.
+  /// </param>
+  public static void Debug(string message, params object?[]? args)
   {
 #if DEBUG
-    Console.WriteLine(message);
+    Console.WriteLine(message, args);
 #endif
   }
 }
