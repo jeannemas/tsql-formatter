@@ -4,8 +4,9 @@ TransactSQLFormatterOptions options = new()
 {
   IndentationString = "  ",
   IdentifierStyle = TransactSQLFormatterOptions.IdentifierStyles.SquareBrackets,
-  KeywordCase = TransactSQLFormatterOptions.KeywordCasing.Uppercase,
+  KeywordCase = TransactSQLFormatterOptions.KeywordCases.Uppercase,
   LinesBetweenStatements = 1,
+  OperatorSpacing = TransactSQLFormatterOptions.OperatorSpacings.SpaceAround,
 };
 TransactSQLFormatter formatter = new(options);
 string sql = @"
@@ -26,6 +27,7 @@ string sql = @"
 
   select top(100) I.*
   from [Sales].[Invoices] as I
+  where Role = N'Admin'
   order by foo
   offset (
     select 0

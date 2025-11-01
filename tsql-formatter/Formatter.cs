@@ -38,20 +38,20 @@ internal class Formatter(TransactSQLFormatterOptions options)
     if (aggregateFunctionCallExpression.IsStar)
     {
       Utils.AppendToLast(lines, "*)");
+
+      return;
     }
-    else
+
+    foreach (SqlScalarExpression scalarExpression in aggregateFunctionCallExpression.Arguments)
     {
-      foreach (SqlScalarExpression scalarExpression in aggregateFunctionCallExpression.Arguments)
-      {
-        List<string> argumentLines = [];
+      List<string> argumentLines = [];
 
-        ScalarExpression(scalarExpression, ref argumentLines);
+      ScalarExpression(scalarExpression, ref argumentLines);
 
-        lines.AddRange(IndentStrings(argumentLines));
-      }
-
-      lines.Add(")");
+      lines.AddRange(IndentStrings(argumentLines));
     }
+
+    lines.Add(")");
   }
 
   /// <summary>
@@ -196,20 +196,19 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void CommonTableExpression(SqlCommonTableExpression commonTableExpression, ref List<string> lines)
   {
-    string header = $"{Keyword(Keywords.WITH)} {Identifier(commonTableExpression.Name)} ";
+    string header = $"{Keyword(Keywords.WITH)} {Identifier(commonTableExpression.Name)}";
 
     if (commonTableExpression.ColumnList is SqlIdentifierCollection columnList)
     {
-      header += $"({string.Join(", ", columnList.Select(Identifier))}) ";
+      header += $" ({string.Join(", ", columnList.Select(Identifier))}) ";
     }
-
-    header += $"{Keyword(Keywords.AS)} (";
 
     List<string> cteLines = [];
 
     QueryExpression(commonTableExpression.QueryExpression, ref cteLines);
 
     lines.Add(header);
+    lines.Add($"{Keyword(Keywords.AS)} (");
     lines.AddRange(IndentStrings(cteLines));
     lines.Add(")");
   }
@@ -240,7 +239,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       lines.Add(leftExpressionLines.First());
     }
 
-    Utils.AppendToLast(lines, $" {ComparisonBooleanExpressionType(comparisonBooleanExpression.ComparisonOperator)} ");
+    Utils.AppendToLast(lines, ComparisonBooleanExpressionType(comparisonBooleanExpression.ComparisonOperator));
 
     List<string> rightExpressionLines = [string.Empty];
 
@@ -269,7 +268,9 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </returns>
   public string ComparisonBooleanExpressionType(SqlComparisonBooleanExpressionType comparisonType)
   {
-    return comparisonType switch
+    Console.WriteLine("ComparisonBooleanExpressionType: {0}, spacing={1}", comparisonType, Options.OperatorSpacing);
+
+    string op = comparisonType switch
     {
       SqlComparisonBooleanExpressionType.Equals => "=",
       SqlComparisonBooleanExpressionType.GreaterThan => ">",
@@ -279,6 +280,24 @@ internal class Formatter(TransactSQLFormatterOptions options)
       SqlComparisonBooleanExpressionType.NotEqual => "<>",
       _ => string.Empty,
     };
+
+    switch (Options.OperatorSpacing)
+    {
+      case TransactSQLFormatterOptions.OperatorSpacings.Dense:
+        {
+          return op;
+        }
+
+      case TransactSQLFormatterOptions.OperatorSpacings.SpaceAround:
+        {
+          return $" {op} ";
+        }
+
+      default:
+        {
+          return op;
+        }
+    }
   }
 
   /// <summary>
@@ -311,12 +330,15 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void GroupByClause(SqlGroupByClause groupByClause, ref List<string> lines)
   {
-    lines.Add(Keyword(Keywords.GROUP_BY));
+    List<string> groupByLines = [string.Empty];
 
     foreach (SqlGroupByItem groupByItem in groupByClause.Items)
     {
-      GroupByItem(groupByItem, ref lines);
+      GroupByItem(groupByItem, ref groupByLines);
     }
+
+    lines.Add(Keyword(Keywords.GROUP_BY));
+    lines.AddRange(IndentStrings(groupByLines));
   }
 
   /// <summary>
@@ -342,7 +364,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       default:
         {
           Utils.Debug($"Unrecognized GROUP BY item type: {groupByItem.GetType().FullName}");
-          lines.Add(groupByItem.Sql); // TODO
+          lines.Add(groupByItem.Sql);
 
           break;
         }
@@ -360,12 +382,11 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void HavingClause(SqlHavingClause havingClause, ref List<string> lines)
   {
-    lines.Add(Keyword(Keywords.HAVING));
-
     List<string> booleanExpressionLines = [];
 
     BooleanExpression(havingClause.Expression, ref booleanExpressionLines);
 
+    lines.Add(Keyword(Keywords.HAVING));
     lines.AddRange(IndentStrings(booleanExpressionLines));
   }
 
@@ -459,7 +480,9 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// <returns></returns>
   public IEnumerable<string> IndentStrings(IEnumerable<string> lines, int level = 1)
   {
-    return lines.Select(line => $"{Indentation(level)}{line}");
+    string indentation = Indentation(level);
+
+    return lines.Select(line => $"{indentation}{line}");
   }
 
   /// <summary>
@@ -475,8 +498,8 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     return Options.KeywordCase switch
     {
-      TransactSQLFormatterOptions.KeywordCasing.Lowercase => keyword.ToLowerInvariant(),
-      TransactSQLFormatterOptions.KeywordCasing.Uppercase => keyword.ToUpperInvariant(),
+      TransactSQLFormatterOptions.KeywordCases.Lowercase => keyword.ToLowerInvariant(),
+      TransactSQLFormatterOptions.KeywordCases.Uppercase => keyword.ToUpperInvariant(),
       _ => keyword,
     };
   }
@@ -671,7 +694,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       default:
         {
           Utils.Debug($"Unrecognized query expression type: {queryExpression.GetType().FullName}");
-          lines.Add(queryExpression.Sql); // TODO
+          lines.Add(queryExpression.Sql);
 
           break;
         }
@@ -824,20 +847,6 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
-  /// Formats a scalar variable reference expression.
-  /// </summary>
-  /// <param name="scalarVariableRefExpression">
-  /// The scalar variable reference expression to format.
-  /// </param>
-  /// <param name="lines">
-  /// The lines to append the formatted scalar variable reference expression to.
-  /// </param>
-  public void ScalarVariableRefExpression(SqlScalarVariableRefExpression scalarVariableRefExpression, ref List<string> lines)
-  {
-    lines.Add(scalarVariableRefExpression.VariableName);
-  }
-
-  /// <summary>
   /// Formats a select expression.
   /// </summary>
   /// <param name="selectExpression">
@@ -874,7 +883,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       default:
         {
           Utils.Debug($"Unrecognized select expression type: {selectExpression.GetType().FullName}");
-          lines.Add(selectExpression.Sql); // TODO
+          lines.Add(selectExpression.Sql);
 
           break;
         }
@@ -995,11 +1004,9 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SelectVariableAssignmentExpression(SqlSelectVariableAssignmentExpression selectVariableAssignmentExpression, ref List<string> lines)
   {
-    List<string> variableLines = [];
+    List<string> variableLines = [selectVariableAssignmentExpression.VariableAssignment.Variable.VariableName];
 
-    ScalarVariableRefExpression(selectVariableAssignmentExpression.VariableAssignment.Variable, ref variableLines);
-
-    Utils.AppendToLast(variableLines, " = ");
+    Utils.AppendToLast(variableLines, ComparisonBooleanExpressionType(SqlComparisonBooleanExpressionType.Equals));
 
     ScalarExpression(selectVariableAssignmentExpression.VariableAssignment.Value, ref variableLines);
 
@@ -1017,11 +1024,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SimpleGroupByItem(SqlSimpleGroupByItem simpleGroupByItem, ref List<string> lines)
   {
-    List<string> expressionLines = [string.Empty];
-
-    ScalarExpression(simpleGroupByItem.Expression, ref expressionLines);
-
-    lines.AddRange(IndentStrings(expressionLines));
+    ScalarExpression(simpleGroupByItem.Expression, ref lines);
   }
 
   /// <summary>
@@ -1047,7 +1050,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       default:
         {
           Utils.Debug($"Unrecognized statement type: {statement.GetType().FullName}");
-          lines.Add(statement.Sql); // TODO
+          lines.Add(statement.Sql);
 
           break;
         }

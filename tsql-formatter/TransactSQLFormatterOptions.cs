@@ -21,7 +21,7 @@ public class TransactSQLFormatterOptions
   /// 
   /// Default is uppercase.
   /// </summary>
-  public KeywordCasing KeywordCase = KeywordCasing.Uppercase;
+  public KeywordCases KeywordCase = KeywordCases.Uppercase;
 
   /// <summary>
   /// Gets or sets the number of lines between SQL statements.
@@ -30,16 +30,54 @@ public class TransactSQLFormatterOptions
   /// </summary>
   public int LinesBetweenStatements = 1;
 
+  /// <summary>
+  /// Gets or sets the spacing style around operators.
+  /// 
+  /// Default is space around.
+  /// </summary>
+  public OperatorSpacings OperatorSpacing = OperatorSpacings.SpaceAround;
+
   public enum IdentifierStyles
   {
+    /// <summary>
+    /// Uses double quotes for SQL identifiers.
+    /// </summary>
     DoubleQuotes,
+
+    /// <summary>
+    /// No special styling for SQL identifiers.
+    /// </summary>
     None,
+
+    /// <summary>
+    /// Uses square brackets for SQL identifiers.
+    /// </summary>
     SquareBrackets,
   }
 
-  public enum KeywordCasing
+  public enum KeywordCases
   {
+    /// <summary>
+    /// Uses lowercase for SQL keywords.
+    /// </summary>
     Lowercase,
+
+    /// <summary>
+    /// Uses uppercase for SQL keywords.
+    /// </summary>
     Uppercase,
+  }
+
+  public enum OperatorSpacings
+  {
+    /// <summary>
+    /// No spaces around operators.
+    /// </summary>
+    Dense,
+
+    /// <summary>
+    /// Spaces around operators.
+    /// </summary>
+    SpaceAround,
   }
 }
