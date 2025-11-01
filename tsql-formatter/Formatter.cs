@@ -29,24 +29,27 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     Utils.AppendToLast(lines, $"{Keyword(aggregateFunctionCallExpression.FunctionName)}(");
     SetQuantifier(aggregateFunctionCallExpression.SetQuantifier, ref lines);
-    Utils.AppendToLast(lines, " ");
 
     if (aggregateFunctionCallExpression.IsStar)
     {
-      Utils.AppendToLast(lines, "*)");
-
-      return;
+      Utils.AppendToLast(lines, "*");
     }
-
-    foreach (SqlScalarExpression scalarExpression in aggregateFunctionCallExpression.Arguments)
+    else
     {
-      List<string> argumentLines = [];
+      for (int argumentIndex = 0; argumentIndex < aggregateFunctionCallExpression.Arguments.Count; argumentIndex += 1)
+      {
+        SqlScalarExpression scalarExpression = aggregateFunctionCallExpression.Arguments[argumentIndex];
 
-      ScalarExpression(scalarExpression, ref argumentLines);
-      lines.AddRange(IndentStrings(argumentLines));
+        ScalarExpression(scalarExpression, ref lines);
+
+        if (argumentIndex < aggregateFunctionCallExpression.Arguments.Count - 1)
+        {
+          Utils.AppendToLast(lines, ", ");
+        }
+      }
     }
 
-    lines.Add(")");
+    Utils.AppendToLast(lines, ")");
   }
 
   /// <summary>
@@ -275,7 +278,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlBooleanExpression), booleanExpression.GetType().FullName);
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlBooleanExpression), booleanExpression.GetType().Name, booleanExpression.Sql);
           lines.Add(booleanExpression.Sql);
 
           break;
@@ -340,7 +343,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlBuiltinScalarFunctionCallExpression), builtinScalarFunctionCallExpression.GetType().FullName);
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlBuiltinScalarFunctionCallExpression), builtinScalarFunctionCallExpression.GetType().Name, builtinScalarFunctionCallExpression.Sql);
           lines.Add(builtinScalarFunctionCallExpression.Sql);
 
           break;
@@ -655,7 +658,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlGroupByItem), groupByItem.GetType().FullName);
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlGroupByItem), groupByItem.GetType().Name, groupByItem.Sql);
           lines.Add(groupByItem.Sql);
 
           break;
@@ -713,7 +716,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlGroupingSetItem), groupingSetItem.GetType().FullName);
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlGroupingSetItem), groupingSetItem.GetType().Name, groupingSetItem.Sql);
           lines.Add(groupingSetItem.Sql);
 
           break;
@@ -768,7 +771,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlHint), hint.GetType().FullName);
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlHint), hint.GetType().Name, hint.Sql);
           lines.Add(hint.Sql);
 
           break;
@@ -952,6 +955,20 @@ internal class Formatter(TransactSQLFormatterOptions options)
     };
 
     Utils.AppendToLast(lines, expression);
+  }
+
+  /// <summary>
+  /// Formats a multipart identifier.
+  /// </summary>
+  /// <param name="multipartIdentifier">
+  /// The multipart identifier to format.
+  /// </param>
+  /// <returns>
+  /// The formatted multipart identifier.
+  /// </returns>
+  public string MultipartIdentifier(SqlMultipartIdentifier multipartIdentifier)
+  {
+    return string.Join(".", multipartIdentifier.Select(Identifier));
   }
 
   /// <summary>
@@ -1160,7 +1177,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlQueryExpression), queryExpression.GetType().FullName);
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlQueryExpression), queryExpression.GetType().Name, queryExpression.Sql);
           lines.Add(queryExpression.Sql);
 
           break;
@@ -1252,12 +1269,14 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SetQuantifier(SqlSetQuantifier setQuantifier, ref List<string> lines)
   {
-    string value = setQuantifier switch
+    string raw = setQuantifier switch
     {
       SqlSetQuantifier.All => Keyword(Keywords.ALL),
       SqlSetQuantifier.Distinct => Keyword(Keywords.DISTINCT),
+      SqlSetQuantifier.None => string.Empty,
       _ => setQuantifier.ToString(),
     };
+    string value = string.IsNullOrWhiteSpace(raw) ? string.Empty : $"{raw} ";
 
     Utils.AppendToLast(lines, value);
   }
@@ -1375,7 +1394,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlScalarExpression), scalarExpression.GetType().FullName);
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlScalarExpression), scalarExpression.GetType().Name, scalarExpression.Sql);
           Utils.AppendToLast(lines, scalarExpression.Sql);
 
           break;
@@ -1412,7 +1431,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlScalarFunctionCallExpression), scalarFunctionCallExpression.GetType().FullName);
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlScalarFunctionCallExpression), scalarFunctionCallExpression.GetType().Name, scalarFunctionCallExpression.Sql);
           lines.Add(scalarFunctionCallExpression.Sql);
 
           break;
@@ -1442,8 +1461,9 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlScalarRefExpression), scalarRefExpression.GetType().FullName);
-          lines.Add(scalarRefExpression.Sql);
+          string identifier = MultipartIdentifier(scalarRefExpression.MultipartIdentifier);
+
+          Utils.AppendToLast(lines, identifier);
 
           break;
         }
@@ -1570,7 +1590,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlSelectExpression), selectExpression.GetType().FullName);
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlSelectExpression), selectExpression.GetType().Name, selectExpression.Sql);
           lines.Add(selectExpression.Sql);
 
           break;
@@ -1721,12 +1741,14 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SortOrder(SqlSortOrder sortOrder, ref List<string> lines)
   {
-    string value = sortOrder switch
+    string raw = sortOrder switch
     {
       SqlSortOrder.Ascending => Keyword(Keywords.ASC),
       SqlSortOrder.Descending => Keyword(Keywords.DESC),
+      SqlSortOrder.None => string.Empty,
       _ => sortOrder.ToString(),
     };
+    string value = string.IsNullOrWhiteSpace(raw) ? string.Empty : $" {raw}";
 
     Utils.AppendToLast(lines, value);
   }
@@ -1753,7 +1775,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlStatement), statement.GetType().FullName);
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlStatement), statement.GetType().Name, statement.Sql);
           lines.Add(statement.Sql);
 
           break;
@@ -1805,7 +1827,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1}", nameof(SqlTableExpression), tableExpression.GetType().FullName);
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlTableExpression), tableExpression.GetType().Name, tableExpression.Sql);
           lines.Add(tableExpression.Sql);
 
           break;
