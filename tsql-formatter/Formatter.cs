@@ -461,7 +461,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
     List<string> cteLines = [string.Empty];
 
     QueryExpression(commonTableExpression.QueryExpression, ref cteLines);
-    Utils.AppendToLast(lines, header);
+    lines.Add(header);
     lines.Add($"{Keyword(Keywords.AS)} (");
     lines.AddRange(IndentStrings(cteLines));
     lines.Add(")");
@@ -1079,7 +1079,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void OffsetFetchClause(SqlOffsetFetchClause offsetFetchClause, ref List<string> lines)
   {
-    Utils.AppendToLast(lines, $"{Keyword(Keywords.OFFSET)} ");
+    lines.Add($"{Keyword(Keywords.OFFSET)} ");
     ScalarExpression(offsetFetchClause.Offset, ref lines);
     Utils.AppendToLast(lines, $" {Keyword(Keywords.ROWS)}");
 
@@ -1113,7 +1113,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void OrderByClause(SqlOrderByClause orderByClause, ref List<string> lines)
   {
-    Utils.AppendToLast(lines, Keyword(Keywords.ORDER_BY));
+    lines.Add(Keyword(Keywords.ORDER_BY));
 
     foreach (SqlOrderByItem orderByItem in orderByClause.Items)
     {
@@ -1229,7 +1229,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     if (querySpecification.SelectClause is SqlSelectClause selectClause)
     {
-      lines.Add(string.Empty);
+      // lines.Add(string.Empty);
       SelectClause(selectClause, ref lines);
     }
 
@@ -1524,7 +1524,6 @@ internal class Formatter(TransactSQLFormatterOptions options)
     Utils.AppendToLast(lines, "(");
     lines.AddRange(IndentStrings(subqueryLines));
     lines.Add(")");
-
   }
 
   /// <summary>
@@ -1683,6 +1682,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SelectSpecification(SqlSelectSpecification selectSpecification, ref List<string> lines)
   {
+    lines.Add(string.Empty);
     QueryExpression(selectSpecification.QueryExpression, ref lines);
 
     if (selectSpecification.OrderByClause is SqlOrderByClause orderByClause)
@@ -1936,13 +1936,13 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       if (hintLines.Count > 1)
       {
-        Utils.AppendToLast(lines, $"{Indentation()}{Keyword(Keywords.WITH)} (");
+        lines.Add($"{Indentation()}{Keyword(Keywords.WITH)} (");
         lines.AddRange(IndentStrings(hintLines));
         lines.Add($"{Indentation()})");
       }
       else
       {
-        Utils.AppendToLast(lines, $"{Indentation()}{Keyword(Keywords.WITH)} ({hintLines.First()})");
+        lines.Add($"{Indentation()}{Keyword(Keywords.WITH)} ({hintLines.First()})");
       }
     }
   }
