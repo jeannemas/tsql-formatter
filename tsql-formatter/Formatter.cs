@@ -108,7 +108,9 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void AtTimeZoneExpression(SqlAtTimeZoneExpression atTimeZoneExpression, ref List<string> lines)
   {
-    lines.Add(atTimeZoneExpression.Sql); // TODO
+    ScalarExpression(atTimeZoneExpression.DateValue, ref lines);
+    Utils.AppendToLast(lines, $" {Keyword(Keywords.AT_TIME_ZONE)} ");
+    ScalarExpression(atTimeZoneExpression.TimeZone, ref lines);
   }
 
   /// <summary>
@@ -139,7 +141,11 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void BetweenBooleanExpression(SqlBetweenBooleanExpression betweenBooleanExpression, ref List<string> lines)
   {
-    lines.Add(betweenBooleanExpression.Sql); // TODO
+    ScalarExpression(betweenBooleanExpression.TestExpression, ref lines);
+    Utils.AppendToLast(lines, $" {Keyword(Keywords.BETWEEN)} ");
+    ScalarExpression(betweenBooleanExpression.BeginExpression, ref lines);
+    Utils.AppendToLast(lines, $" {Keyword(Keywords.AND)} ");
+    ScalarExpression(betweenBooleanExpression.EndExpression, ref lines);
   }
 
   /// <summary>
@@ -199,7 +205,34 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void BinaryQueryExpression(SqlBinaryQueryExpression binaryQueryExpression, ref List<string> lines)
   {
-    lines.Add(binaryQueryExpression.Sql); // TODO
+    QueryExpression(binaryQueryExpression.Left, ref lines);
+    lines.Add(string.Empty);
+    BinaryQueryOperatorType(binaryQueryExpression.Operator, ref lines);
+    Utils.AppendToLast(lines, " ");
+    QueryExpression(binaryQueryExpression.Right, ref lines);
+  }
+
+  /// <summary>
+  /// Formats a binary query operator type.
+  /// </summary>
+  /// <param name="binaryQueryOperatorType">
+  /// The binary query operator type to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted binary query operator type to.
+  /// </param>
+  public void BinaryQueryOperatorType(SqlBinaryQueryOperatorType binaryQueryOperatorType, ref List<string> lines)
+  {
+    string op = binaryQueryOperatorType switch
+    {
+      SqlBinaryQueryOperatorType.Except => Keyword(Keywords.EXCEPT),
+      SqlBinaryQueryOperatorType.Intersect => Keyword(Keywords.INTERSECT),
+      SqlBinaryQueryOperatorType.Union => Keyword(Keywords.UNION),
+      SqlBinaryQueryOperatorType.UnionAll => Keyword(Keywords.UNION_ALL),
+      _ => binaryQueryOperatorType.ToString(),
+    };
+
+    Utils.AppendToLast(lines, op);
   }
 
   /// <summary>
@@ -213,7 +246,45 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void BinaryScalarExpression(SqlBinaryScalarExpression binaryScalarExpression, ref List<string> lines)
   {
-    lines.Add(binaryScalarExpression.Sql); // TODO
+    ScalarExpression(binaryScalarExpression.Left, ref lines);
+    BinaryScalarOperatorType(binaryScalarExpression.Operator, ref lines);
+    ScalarExpression(binaryScalarExpression.Right, ref lines);
+  }
+
+  /// <summary>
+  /// Formats a binary scalar operator type.
+  /// </summary>
+  /// <param name="binaryScalarOperatorType">
+  /// The binary scalar operator type to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted binary scalar operator type to.
+  /// </param>
+  public void BinaryScalarOperatorType(SqlBinaryScalarOperatorType binaryScalarOperatorType, ref List<string> lines)
+  {
+    string op = binaryScalarOperatorType switch
+    {
+      SqlBinaryScalarOperatorType.Add => "+",
+      SqlBinaryScalarOperatorType.Assign => "=",
+      SqlBinaryScalarOperatorType.BitwiseAnd => "&",
+      SqlBinaryScalarOperatorType.BitwiseOr => "|",
+      SqlBinaryScalarOperatorType.BitwiseXor => "^",
+      SqlBinaryScalarOperatorType.Divide => "/",
+      SqlBinaryScalarOperatorType.Equals => "=",
+      SqlBinaryScalarOperatorType.GreaterThan => ">",
+      SqlBinaryScalarOperatorType.GreaterThanOrEqual => ">=",
+      SqlBinaryScalarOperatorType.LessThan => "<",
+      SqlBinaryScalarOperatorType.LessThanOrEqual => "<=",
+      SqlBinaryScalarOperatorType.Modulus => "%",
+      SqlBinaryScalarOperatorType.Multiply => "*",
+      SqlBinaryScalarOperatorType.NotEqualTo => "<>",
+      SqlBinaryScalarOperatorType.NotGreaterThan => "<=",
+      SqlBinaryScalarOperatorType.NotLessThan => ">=",
+      _ => binaryScalarOperatorType.ToString(),
+    };
+    string formatted = Operator(op);
+
+    Utils.AppendToLast(lines, formatted);
   }
 
   /// <summary>
@@ -393,7 +464,30 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void CaseExpression(SqlCaseExpression caseExpression, ref List<string> lines)
   {
-    lines.Add(caseExpression.Sql); // TODO
+    switch (caseExpression)
+    {
+      case SqlSearchedCaseExpression searchedCaseExpression:
+        {
+          SearchedCaseExpression(searchedCaseExpression, ref lines);
+
+          break;
+        }
+
+      case SqlSimpleCaseExpression simpleCaseExpression:
+        {
+          SimpleCaseExpression(simpleCaseExpression, ref lines);
+
+          break;
+        }
+
+      default:
+        {
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlCaseExpression), caseExpression.GetType().Name, caseExpression.Sql);
+          lines.Add(caseExpression.Sql);
+
+          break;
+        }
+    }
   }
 
   /// <summary>
@@ -407,7 +501,45 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void CastExpression(SqlCastExpression castExpression, ref List<string> lines)
   {
-    lines.Add(castExpression.Sql); // TODO
+    switch (castExpression)
+    {
+      case SqlConvertExpression convertExpression:
+        {
+          ConvertExpression(convertExpression, ref lines);
+
+          break;
+        }
+
+      default:
+        {
+          Utils.AppendToLast(lines, $"{Keyword(castExpression.FunctionName)}(");
+
+          if (castExpression.IsStar)
+          {
+            Utils.AppendToLast(lines, "*");
+          }
+          else
+          {
+            for (int argumentIndex = 0; argumentIndex < castExpression.Arguments.Count; argumentIndex += 1)
+            {
+              SqlScalarExpression scalarExpression = castExpression.Arguments[argumentIndex];
+
+              ScalarExpression(scalarExpression, ref lines);
+
+              if (argumentIndex < castExpression.Arguments.Count - 1)
+              {
+                Utils.AppendToLast(lines, ", ");
+              }
+            }
+          }
+
+          Utils.AppendToLast(lines, $" {Keyword(Keywords.AS)} ");
+          DataTypeSpecification(castExpression.DataTypeSpec, ref lines);
+          Utils.AppendToLast(lines, ")");
+
+          break;
+        }
+    }
   }
 
   /// <summary>
@@ -421,7 +553,8 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void CollateScalarExpression(SqlCollateScalarExpression collateScalarExpression, ref List<string> lines)
   {
-    lines.Add(collateScalarExpression.Sql); // TODO
+    ScalarExpression(collateScalarExpression.Expression, ref lines);
+    Utils.AppendToLast(lines, $" {Keyword(Keywords.COLLATE)} {collateScalarExpression.Collation.Name.Value}");
   }
 
   /// <summary>
@@ -532,14 +665,47 @@ internal class Formatter(TransactSQLFormatterOptions options)
       SqlComparisonBooleanExpressionType.NotEqual => "<>",
       _ => comparisonType.ToString(),
     };
-    string formatted = Options.OperatorSpacing switch
-    {
-      TransactSQLFormatterOptions.OperatorSpacings.Dense => op,
-      TransactSQLFormatterOptions.OperatorSpacings.SpaceAround => $" {op} ",
-      _ => op,
-    };
+    string formatted = Operator(op);
 
     Utils.AppendToLast(lines, formatted);
+  }
+
+  /// <summary>
+  /// Formats a CONVERT expression.
+  /// </summary>
+  /// <param name="convertExpression">
+  /// The CONVERT expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted CONVERT expression to.
+  /// </param>
+  public void ConvertExpression(SqlConvertExpression convertExpression, ref List<string> lines)
+  {
+    Utils.AppendToLast(lines, $"{Keyword(convertExpression.FunctionName)}(");
+
+    if (convertExpression.IsStar)
+    {
+      Utils.AppendToLast(lines, "*");
+    }
+    else
+    {
+      DataTypeSpecification(convertExpression.DataTypeSpec, ref lines);
+      Utils.AppendToLast(lines, ", ");
+
+      for (int argumentIndex = 0; argumentIndex < convertExpression.Arguments.Count; argumentIndex += 1)
+      {
+        SqlScalarExpression scalarExpression = convertExpression.Arguments[argumentIndex];
+
+        ScalarExpression(scalarExpression, ref lines);
+
+        if (argumentIndex < convertExpression.Arguments.Count - 1)
+        {
+          Utils.AppendToLast(lines, ", ");
+        }
+      }
+    }
+
+    Utils.AppendToLast(lines, ")");
   }
 
   /// <summary>
@@ -553,7 +719,70 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void CubeGroupByItem(SqlCubeGroupByItem cubeGroupByItem, ref List<string> lines)
   {
-    lines.Add(cubeGroupByItem.Sql); // TODO
+    Utils.AppendToLast(lines, $"{Keyword(Keywords.CUBE)} (");
+
+    for (int itemIndex = 0; itemIndex < cubeGroupByItem.Items.Count; itemIndex += 1)
+    {
+      SqlSimpleGroupByItem simpleGroupByItem = cubeGroupByItem.Items[itemIndex];
+
+      SimpleGroupByItem(simpleGroupByItem, ref lines);
+
+      if (itemIndex < cubeGroupByItem.Items.Count - 1)
+      {
+        Utils.AppendToLast(lines, ", ");
+      }
+    }
+
+    Utils.AppendToLast(lines, ")");
+  }
+
+  /// <summary>
+  /// Formats a data type.
+  /// </summary>
+  /// <param name="dataType">
+  /// The data type to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted data type to.
+  /// </param>
+  public void DataType(SqlDataType dataType, ref List<string> lines)
+  {
+    Utils.AppendToLast(lines, Keyword(dataType.ObjectIdentifier.ObjectName.Value));
+  }
+
+  /// <summary>
+  /// Formats a data type specification.
+  /// </summary>
+  /// <param name="dataTypeSpecification">
+  /// The data type specification to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted data type specification to.
+  /// </param>
+  public void DataTypeSpecification(SqlDataTypeSpecification dataTypeSpecification, ref List<string> lines)
+  {
+    DataType(dataTypeSpecification.DataType, ref lines);
+
+    if (dataTypeSpecification.IsMaximum || dataTypeSpecification.Argument1.HasValue)
+    {
+      Utils.AppendToLast(lines, "(");
+
+      if (dataTypeSpecification.IsMaximum)
+      {
+        Utils.AppendToLast(lines, Keyword(Keywords.MAX));
+      }
+      else if (dataTypeSpecification.Argument1.HasValue)
+      {
+        Utils.AppendToLast(lines, $"{dataTypeSpecification.Argument1.Value}");
+
+        if (dataTypeSpecification.Argument2.HasValue)
+        {
+          Utils.AppendToLast(lines, $", {dataTypeSpecification.Argument2.Value}");
+        }
+      }
+
+      Utils.AppendToLast(lines, ")");
+    }
   }
 
   /// <summary>
@@ -567,7 +796,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void ExistsBooleanExpression(SqlExistsBooleanExpression existsBooleanExpression, ref List<string> lines)
   {
-    lines.Add(existsBooleanExpression.Sql); // TODO
+    QueryExpression(existsBooleanExpression.QueryExpression, ref lines);
   }
 
   /// <summary>
@@ -600,7 +829,8 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void FullTextBooleanExpression(SqlFullTextBooleanExpression fullTextBooleanExpression, ref List<string> lines)
   {
-    lines.Add(fullTextBooleanExpression.Sql); // TODO
+    Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlFullTextBooleanExpression), fullTextBooleanExpression.Sql);
+    lines.Add(fullTextBooleanExpression.Sql);
   }
 
   /// <summary>
@@ -1103,6 +1333,30 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats an operator according to the configured spacing.
+  /// </summary>
+  /// <param name="op">
+  /// The operator to format.
+  /// </param>
+  /// <returns>
+  /// The formatted operator.
+  /// </returns>
+  public string Operator(string op)
+  {
+    if (string.IsNullOrWhiteSpace(op))
+    {
+      return op;
+    }
+
+    return Options.OperatorSpacing switch
+    {
+      TransactSQLFormatterOptions.OperatorSpacings.Dense => op,
+      TransactSQLFormatterOptions.OperatorSpacings.SpaceAround => $" {op} ",
+      _ => op,
+    };
+  }
+
+  /// <summary>
   /// Formats an ORDER BY clause.
   /// </summary>
   /// <param name="orderByClause">
@@ -1229,7 +1483,6 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     if (querySpecification.SelectClause is SqlSelectClause selectClause)
     {
-      // lines.Add(string.Empty);
       SelectClause(selectClause, ref lines);
     }
 
@@ -1293,6 +1546,20 @@ internal class Formatter(TransactSQLFormatterOptions options)
   public void RollupGroupByItem(SqlRollupGroupByItem rollupGroupByItem, ref List<string> lines)
   {
     lines.Add(rollupGroupByItem.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats a searched CASE expression.
+  /// </summary>
+  /// <param name="searchedCaseExpression">
+  /// The searched CASE expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted searched CASE expression to.
+  /// </param>
+  public void SearchedCaseExpression(SqlSearchedCaseExpression searchedCaseExpression, ref List<string> lines)
+  {
+    lines.Add(searchedCaseExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -1751,6 +2018,20 @@ internal class Formatter(TransactSQLFormatterOptions options)
     ComparisonBooleanExpressionType(SqlComparisonBooleanExpressionType.Equals, ref variableLines);
     ScalarExpression(selectVariableAssignmentExpression.VariableAssignment.Value, ref variableLines);
     lines.AddRange(IndentStrings(variableLines));
+  }
+
+  /// <summary>
+  /// Formats a simple CASE expression.
+  /// </summary>
+  /// <param name="simpleCaseExpression">
+  /// The simple CASE expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted simple CASE expression to.
+  /// </param>
+  public void SimpleCaseExpression(SqlSimpleCaseExpression simpleCaseExpression, ref List<string> lines)
+  {
+    lines.Add(simpleCaseExpression.Sql); // TODO
   }
 
   /// <summary>
