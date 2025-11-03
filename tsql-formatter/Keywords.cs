@@ -10,8 +10,8 @@ internal class Keywords
   public const string BETWEEN = "BETWEEN";
   public const string COLLATE = "COLLATE";
   public const string CUBE = "CUBE";
-  public const string CURSOR = "CURSOR";
   public const string DEFAULT = "DEFAULT";
+  public const string DELETE = "DELETE";
   public const string DESC = "DESC";
   public const string DISTINCT = "DISTINCT";
   public const string EXCEPT = "EXCEPT";

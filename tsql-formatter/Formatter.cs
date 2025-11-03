@@ -34,15 +34,15 @@ internal class Formatter(TransactSQLFormatterOptions options)
     {
       Utils.AppendToLast(lines, "*");
     }
-    else
+    else if (aggregateFunctionCallExpression.Arguments is SqlScalarExpressionCollection scalarExpressionCollection)
     {
-      for (int argumentIndex = 0; argumentIndex < aggregateFunctionCallExpression.Arguments.Count; argumentIndex += 1)
+      for (int argumentIndex = 0; argumentIndex < scalarExpressionCollection.Count; argumentIndex += 1)
       {
-        SqlScalarExpression scalarExpression = aggregateFunctionCallExpression.Arguments[argumentIndex];
+        SqlScalarExpression scalarExpression = scalarExpressionCollection[argumentIndex];
 
         ScalarExpression(scalarExpression, ref lines);
 
-        if (argumentIndex < aggregateFunctionCallExpression.Arguments.Count - 1)
+        if (argumentIndex < scalarExpressionCollection.Count - 1)
         {
           Utils.AppendToLast(lines, ", ");
         }
@@ -445,8 +445,28 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       default:
         {
-          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlBuiltinScalarFunctionCallExpression), builtinScalarFunctionCallExpression.GetType().Name, builtinScalarFunctionCallExpression.Sql);
-          lines.Add(builtinScalarFunctionCallExpression.Sql);
+          Utils.AppendToLast(lines, $"{Keyword(builtinScalarFunctionCallExpression.FunctionName)}(");
+
+          if (builtinScalarFunctionCallExpression.IsStar)
+          {
+            Utils.AppendToLast(lines, "*");
+          }
+          else if (builtinScalarFunctionCallExpression.Arguments is SqlScalarExpressionCollection scalarExpressionCollection)
+          {
+            for (int argumentIndex = 0; argumentIndex < scalarExpressionCollection.Count; argumentIndex += 1)
+            {
+              SqlScalarExpression scalarExpression = scalarExpressionCollection[argumentIndex];
+
+              ScalarExpression(scalarExpression, ref lines);
+
+              if (argumentIndex < scalarExpressionCollection.Count - 1)
+              {
+                Utils.AppendToLast(lines, ", ");
+              }
+            }
+          }
+
+          Utils.AppendToLast(lines, ")");
 
           break;
         }
@@ -518,15 +538,15 @@ internal class Formatter(TransactSQLFormatterOptions options)
           {
             Utils.AppendToLast(lines, "*");
           }
-          else
+          else if (castExpression.Arguments is SqlScalarExpressionCollection scalarExpressionCollection)
           {
-            for (int argumentIndex = 0; argumentIndex < castExpression.Arguments.Count; argumentIndex += 1)
+            for (int argumentIndex = 0; argumentIndex < scalarExpressionCollection.Count; argumentIndex += 1)
             {
-              SqlScalarExpression scalarExpression = castExpression.Arguments[argumentIndex];
+              SqlScalarExpression scalarExpression = scalarExpressionCollection[argumentIndex];
 
               ScalarExpression(scalarExpression, ref lines);
 
-              if (argumentIndex < castExpression.Arguments.Count - 1)
+              if (argumentIndex < scalarExpressionCollection.Count - 1)
               {
                 Utils.AppendToLast(lines, ", ");
               }
@@ -690,17 +710,21 @@ internal class Formatter(TransactSQLFormatterOptions options)
     else
     {
       DataTypeSpecification(convertExpression.DataTypeSpec, ref lines);
-      Utils.AppendToLast(lines, ", ");
 
-      for (int argumentIndex = 0; argumentIndex < convertExpression.Arguments.Count; argumentIndex += 1)
+      if (convertExpression.Arguments is SqlScalarExpressionCollection scalarExpressionCollection)
       {
-        SqlScalarExpression scalarExpression = convertExpression.Arguments[argumentIndex];
+        Utils.AppendToLast(lines, ", ");
 
-        ScalarExpression(scalarExpression, ref lines);
-
-        if (argumentIndex < convertExpression.Arguments.Count - 1)
+        for (int argumentIndex = 0; argumentIndex < scalarExpressionCollection.Count; argumentIndex += 1)
         {
-          Utils.AppendToLast(lines, ", ");
+          SqlScalarExpression scalarExpression = scalarExpressionCollection[argumentIndex];
+
+          ScalarExpression(scalarExpression, ref lines);
+
+          if (argumentIndex < scalarExpressionCollection.Count - 1)
+          {
+            Utils.AppendToLast(lines, ", ");
+          }
         }
       }
     }
@@ -782,6 +806,109 @@ internal class Formatter(TransactSQLFormatterOptions options)
       }
 
       Utils.AppendToLast(lines, ")");
+    }
+  }
+
+  /// <summary>
+  /// Formats a DELETE specification.
+  /// </summary>
+  /// <param name="deleteSpecification">
+  /// The DELETE specification to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted DELETE specification to.
+  /// </param>
+  public void DeleteSpecification(SqlDeleteSpecification deleteSpecification, ref List<string> lines)
+  {
+    lines.Add(Keyword(Keywords.DELETE));
+
+    if (deleteSpecification.TopSpecification is SqlTopSpecification topSpecification)
+    {
+      Utils.AppendToLast(lines, " ");
+      TopSpecification(topSpecification, ref lines);
+    }
+
+    if (deleteSpecification.OutputClause is SqlOutputClause outputClause)
+    {
+      lines.Add(string.Empty);
+      OutputClause(outputClause, ref lines);
+    }
+    else if (deleteSpecification.OutputIntoClause is SqlOutputIntoClause outputIntoClause)
+    {
+      lines.Add(string.Empty);
+      OutputIntoClause(outputIntoClause, ref lines);
+    }
+
+    if (deleteSpecification.Target is SqlTableExpression tableExpression)
+    {
+      lines.Add(string.Empty);
+      TableExpression(tableExpression, ref lines);
+    }
+
+    if (deleteSpecification.FromClause is SqlFromClause fromClause)
+    {
+      lines.Add(string.Empty);
+      FromClause(fromClause, ref lines);
+    }
+
+    if (deleteSpecification.WhereClause is SqlWhereClause whereClause)
+    {
+      lines.Add(string.Empty);
+      WhereClause(whereClause, ref lines);
+    }
+  }
+
+  /// <summary>
+  /// Formats a DELETE statement.
+  /// </summary>
+  /// <param name="deleteStatement">
+  /// The DELETE statement to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted DELETE statement to.
+  /// </param>
+  public void DeleteStatement(SqlDeleteStatement deleteStatement, ref List<string> lines)
+  {
+    if (deleteStatement.QueryWithClause is SqlQueryWithClause queryWithClause)
+    {
+      QueryWithClause(queryWithClause, ref lines);
+    }
+
+    if (deleteStatement.DeleteSpecification is SqlDeleteSpecification deleteSpecification)
+    {
+      DeleteSpecification(deleteSpecification, ref lines);
+    }
+  }
+
+  /// <summary>
+  /// Formats a DML statement.
+  /// </summary>
+  /// <param name="dmlStatement">
+  /// The DML statement to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted DML statement to.
+  /// </param>
+  public void DmlStatement(SqlDmlStatement dmlStatement, ref List<string> lines)
+  {
+    switch (dmlStatement)
+    {
+      case SqlDeleteStatement deleteStatement:
+        {
+          DeleteStatement(deleteStatement, ref lines);
+
+          break;
+        }
+
+      // TODO
+
+      default:
+        {
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlDmlStatement), dmlStatement.GetType().Name, dmlStatement.Sql);
+          lines.Add(dmlStatement.Sql);
+
+          break;
+        }
     }
   }
 
@@ -1162,6 +1289,38 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a JOIN table expression.
+  /// </summary>
+  /// <param name="joinTableExpression">
+  /// The JOIN table expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted JOIN table expression to.
+  /// </param>
+  public void JoinTableExpression(SqlJoinTableExpression joinTableExpression, ref List<string> lines)
+  {
+    switch (joinTableExpression)
+    {
+      case SqlQualifiedJoinTableExpression qualifiedJoinTableExpression:
+        {
+          QualifiedJoinTableExpression(qualifiedJoinTableExpression, ref lines);
+
+          break;
+        }
+
+      // TODO
+
+      default:
+        {
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlJoinTableExpression), joinTableExpression.GetType().Name, joinTableExpression.Sql);
+          lines.Add(joinTableExpression.Sql);
+
+          break;
+        }
+    }
+  }
+
+  /// <summary>
   /// Formats a keyword according to the configured casing.
   /// </summary>
   /// <param name="keyword">
@@ -1399,6 +1558,34 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats an OUTPUT clause.
+  /// </summary>
+  /// <param name="outputClause">
+  /// The OUTPUT clause to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted OUTPUT clause to.
+  /// </param>
+  public void OutputClause(SqlOutputClause outputClause, ref List<string> lines)
+  {
+    lines.Add(outputClause.Sql); // TODO
+  }
+
+  /// <summary>
+  /// Formats an OUTPUT INTO clause.
+  /// </summary>
+  /// <param name="outputIntoClause">
+  /// The OUTPUT INTO clause to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted OUTPUT INTO clause to.
+  /// </param>
+  public void OutputIntoClause(SqlOutputIntoClause outputIntoClause, ref List<string> lines)
+  {
+    lines.Add(outputIntoClause.Sql); // TODO
+  }
+
+  /// <summary>
   /// Formats a parse result.
   /// </summary>
   /// <param name="parseResult">
@@ -1417,6 +1604,20 @@ internal class Formatter(TransactSQLFormatterOptions options)
     }
 
     return string.Join(Environment.NewLine, lines);
+  }
+
+  /// <summary>
+  /// Formats a qualified JOIN table expression.
+  /// </summary>
+  /// <param name="qualifiedJoinTableExpression">
+  /// The qualified JOIN table expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted qualified JOIN table expression to.
+  /// </param>
+  public void QualifiedJoinTableExpression(SqlQualifiedJoinTableExpression qualifiedJoinTableExpression, ref List<string> lines)
+  {
+    lines.Add(qualifiedJoinTableExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -2084,12 +2285,21 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     switch (statement)
     {
+      case SqlDmlStatement dmlStatement:
+        {
+          DmlStatement(dmlStatement, ref lines);
+
+          break;
+        }
+
       case SqlSelectStatement selectStatement:
         {
           SelectStatement(selectStatement, ref lines);
 
           break;
         }
+
+      // TODO
 
       default:
         {
@@ -2136,12 +2346,21 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     switch (tableExpression)
     {
+      case SqlJoinTableExpression joinTableExpression:
+        {
+          JoinTableExpression(joinTableExpression, ref lines);
+
+          break;
+        }
+
       case SqlTableRefExpression tableRefExpression:
         {
           TableRefExpression(tableRefExpression, ref lines);
 
           break;
         }
+
+      // TODO
 
       default:
         {
@@ -2319,7 +2538,22 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void UserDefinedScalarFunctionCallExpression(SqlUserDefinedScalarFunctionCallExpression userDefinedScalarFunctionCallExpression, ref List<string> lines)
   {
-    lines.Add(userDefinedScalarFunctionCallExpression.Sql); // TODO
+    ObjectIdentifier(userDefinedScalarFunctionCallExpression.ObjectIdentifier, ref lines);
+    Utils.AppendToLast(lines, "(");
+
+    for (int argumentIndex = 0; argumentIndex < userDefinedScalarFunctionCallExpression.Arguments.Count; argumentIndex += 1)
+    {
+      SqlScalarExpression scalarExpression = userDefinedScalarFunctionCallExpression.Arguments[argumentIndex];
+
+      ScalarExpression(scalarExpression, ref lines);
+
+      if (argumentIndex < userDefinedScalarFunctionCallExpression.Arguments.Count - 1)
+      {
+        Utils.AppendToLast(lines, ", ");
+      }
+    }
+
+    Utils.AppendToLast(lines, ")");
   }
 
   /// <summary>
