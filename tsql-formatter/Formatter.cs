@@ -1868,21 +1868,6 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
-  /// Formats a searched CASE expression.
-  /// </summary>
-  /// <param name="searchedCaseExpression">
-  /// The searched CASE expression to format.
-  /// </param>
-  /// <param name="lines">
-  /// The lines to append the formatted searched CASE expression to.
-  /// </param>
-  public void SearchedCaseExpression(SqlSearchedCaseExpression searchedCaseExpression, ref List<string> lines)
-  {
-    Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlSearchedCaseExpression), searchedCaseExpression.Sql);
-    lines.Add(searchedCaseExpression.Sql); // TODO
-  }
-
-  /// <summary>
   /// Formats a set quantifier.
   /// </summary>
   /// <param name="setQuantifier">
@@ -2128,6 +2113,36 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a searched CASE expression.
+  /// </summary>
+  /// <param name="searchedCaseExpression">
+  /// The searched CASE expression to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted searched CASE expression to.
+  /// </param>
+  public void SearchedCaseExpression(SqlSearchedCaseExpression searchedCaseExpression, ref List<string> lines)
+  {
+    Utils.AppendToLast(lines, Keyword(Keywords.CASE));
+
+    foreach (SqlSearchedWhenClause searchedWhenClause in searchedCaseExpression.WhenClauses)
+    {
+      SearchedWhenClause(searchedWhenClause, ref lines);
+    }
+
+    if (searchedCaseExpression.ElseExpression is SqlScalarExpression elseExpression)
+    {
+      List<string> elseLines = [string.Empty];
+
+      lines.Add(Keyword(Keywords.ELSE));
+      ScalarExpression(elseExpression, ref elseLines);
+      lines.AddRange(IndentStrings(elseLines));
+    }
+
+    lines.Add(Keyword(Keywords.END));
+  }
+
+  /// <summary>
   /// Formats a searched WHEN clause.
   /// </summary>
   /// <param name="searchedWhenClause">
@@ -2138,8 +2153,13 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SearchedWhenClause(SqlSearchedWhenClause searchedWhenClause, ref List<string> lines)
   {
-    Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlSearchedWhenClause), searchedWhenClause.Sql);
-    lines.Add(searchedWhenClause.Sql); // TODO
+    List<string> thenLines = [string.Empty];
+
+    lines.Add($"{Keyword(Keywords.WHEN)} ");
+    BooleanExpression(searchedWhenClause.WhenExpression, ref lines);
+    Utils.AppendToLast(lines, $" {Keyword(Keywords.THEN)}");
+    ScalarExpression(searchedWhenClause.ThenExpression, ref thenLines);
+    lines.AddRange(IndentStrings(thenLines));
   }
 
   /// <summary>
@@ -2352,9 +2372,24 @@ internal class Formatter(TransactSQLFormatterOptions options)
   /// </param>
   public void SimpleCaseExpression(SqlSimpleCaseExpression simpleCaseExpression, ref List<string> lines)
   {
-    Console.WriteLine(simpleCaseExpression.Json());
-    Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlSimpleCaseExpression), simpleCaseExpression.Sql);
-    lines.Add(simpleCaseExpression.Sql); // TODO
+    Utils.AppendToLast(lines, $"{Keyword(Keywords.CASE)} ");
+    ScalarExpression(simpleCaseExpression.TestExpression, ref lines);
+
+    foreach (SqlSimpleWhenClause simpleWhenClause in simpleCaseExpression.WhenClauses)
+    {
+      SimpleWhenClause(simpleWhenClause, ref lines);
+    }
+
+    if (simpleCaseExpression.ElseExpression is SqlScalarExpression elseExpression)
+    {
+      List<string> elseLines = [string.Empty];
+
+      lines.Add(Keyword(Keywords.ELSE));
+      ScalarExpression(elseExpression, ref elseLines);
+      lines.AddRange(IndentStrings(elseLines));
+    }
+
+    lines.Add(Keyword(Keywords.END));
   }
 
   /// <summary>
@@ -2369,6 +2404,26 @@ internal class Formatter(TransactSQLFormatterOptions options)
   public void SimpleGroupByItem(SqlSimpleGroupByItem simpleGroupByItem, ref List<string> lines)
   {
     ScalarExpression(simpleGroupByItem.Expression, ref lines);
+  }
+
+  /// <summary>
+  /// Formats a simple WHEN clause.
+  /// </summary>
+  /// <param name="simpleWhenClause">
+  /// The simple WHEN clause to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted simple WHEN clause to.
+  /// </param>
+  public void SimpleWhenClause(SqlSimpleWhenClause simpleWhenClause, ref List<string> lines)
+  {
+    List<string> thenLines = [string.Empty];
+
+    lines.Add($"{Keyword(Keywords.WHEN)} ");
+    ScalarExpression(simpleWhenClause.WhenExpression, ref lines);
+    Utils.AppendToLast(lines, $" {Keyword(Keywords.THEN)}");
+    ScalarExpression(simpleWhenClause.ThenExpression, ref thenLines);
+    lines.AddRange(IndentStrings(thenLines));
   }
 
   /// <summary>
