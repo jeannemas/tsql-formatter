@@ -1,3 +1,6 @@
+using Microsoft.SqlServer.Management.SqlParser.SqlCodeDom;
+using System.Text.Json;
+
 namespace tsql_formatter;
 
 internal class Utils
@@ -43,5 +46,51 @@ internal class Utils
 #if DEBUG
     Console.WriteLine(message, args);
 #endif
+  }
+}
+
+public static class SqlCodeObjectExtension
+{
+  private static readonly JsonSerializerOptions jsonSerializerOptions = new()
+  {
+    WriteIndented = true,
+  };
+
+  /// <summary>
+  /// Serializes the given SqlCodeObject into a JSON string.
+  /// </summary>
+  /// <param name="sqlCodeObject">
+  /// The SqlCodeObject to serialize.
+  /// </param>
+  /// <returns>
+  /// The JSON string representation of the SqlCodeObject.
+  /// </returns>
+  public static string Json(this SqlCodeObject sqlCodeObject)
+  {
+    IDictionary<string, string?> dictionary = sqlCodeObject
+      .GetType()
+      .GetProperties()
+      .Where(property =>
+        (
+          property.PropertyType.IsSubclassOf(typeof(SqlCodeObject)) // Include SqlCodeObject properties
+          && property.Name != nameof(SqlCodeObject.Statement) // Omit redundant property
+        )
+        || property.PropertyType.IsEnum // Include enum properties
+        || property.Name == nameof(SqlCodeObject.Sql) // Include Sql property
+      )
+      .ToDictionary(
+        property => property.Name,
+        property =>
+          property.GetValue(sqlCodeObject) switch
+          {
+            SqlCodeObject codeObject => codeObject.Sql,
+            Enum enumValue => enumValue.ToString(),
+            string s => s,
+            null => null,
+            _ => null,
+          }
+      );
+
+    return JsonSerializer.Serialize(dictionary, jsonSerializerOptions);
   }
 }

@@ -401,6 +401,13 @@ string select = @"
   FROM Production.Product
   WHERE Color = 'Yellow'
   ORDER BY ListPrice ASC;
+
+  SELECT @@VERSION AS SQLVersion;
+
+  SELECT Region, Product, SUM(Amount) AS TotalAmount
+  FROM Sales
+  GROUP BY Region, Product
+  WITH ROLLUP;
 ";
 string update = @"";
 string delete = @"";
