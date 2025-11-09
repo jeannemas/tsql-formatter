@@ -33,6 +33,40 @@ internal class Utils
   }
 
   /// <summary>
+  /// Appends the first of the string to the last string in the list, then appends the next strings as new entries.
+  /// </summary>
+  /// <param name="list">
+  /// The list to append to.
+  /// </param>
+  /// <param name="strings">
+  /// The strings to append.
+  /// </param>
+  /// <exception cref="InvalidOperationException">
+  /// Thrown if the list is empty.
+  /// </exception>
+  public static void AppendToLast(List<string> list, IEnumerable<string> strings)
+  {
+    if (list.Count == 0)
+    {
+      throw new InvalidOperationException("Cannot append to last string of an empty list.");
+    }
+
+    if (!strings.Any())
+    {
+      return;
+    }
+
+    int lastIndex = list.Count - 1;
+    string lastStr = list[lastIndex];
+
+    lastStr += strings.First();
+
+    list[lastIndex] = lastStr;
+
+    list.AddRange(strings.Skip(1));
+  }
+
+  /// <summary>
   /// Outputs a debug message to the console if in DEBUG mode.
   /// </summary>
   /// <param name="message">

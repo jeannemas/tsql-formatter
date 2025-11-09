@@ -420,7 +420,5 @@ IEnumerable<string> scripts = [
 
 foreach (string script in scripts)
 {
-  string result = formatter.FormatTsql(script);
-
-  Console.WriteLine(result);
+  Console.WriteLine(formatter.FormatTsql(script));
 }

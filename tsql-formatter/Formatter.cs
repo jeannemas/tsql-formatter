@@ -270,9 +270,11 @@ internal class Formatter(TransactSQLFormatterOptions options)
       SqlBinaryScalarOperatorType.BitwiseOr => "|",
       SqlBinaryScalarOperatorType.BitwiseXor => "^",
       SqlBinaryScalarOperatorType.Divide => "/",
+      SqlBinaryScalarOperatorType.DoublePipe => "||",
       SqlBinaryScalarOperatorType.Equals => "=",
       SqlBinaryScalarOperatorType.GreaterThan => ">",
       SqlBinaryScalarOperatorType.GreaterThanOrEqual => ">=",
+      SqlBinaryScalarOperatorType.LeftShift => "<<",
       SqlBinaryScalarOperatorType.LessThan => "<",
       SqlBinaryScalarOperatorType.LessThanOrEqual => "<=",
       SqlBinaryScalarOperatorType.Modulus => "%",
@@ -280,6 +282,8 @@ internal class Formatter(TransactSQLFormatterOptions options)
       SqlBinaryScalarOperatorType.NotEqualTo => "<>",
       SqlBinaryScalarOperatorType.NotGreaterThan => "<=",
       SqlBinaryScalarOperatorType.NotLessThan => ">=",
+      SqlBinaryScalarOperatorType.RightShift => ">>",
+      SqlBinaryScalarOperatorType.Subtract => "-",
       _ => binaryScalarOperatorType.ToString(),
     };
     string formatted = Operator(op);
@@ -679,10 +683,18 @@ internal class Formatter(TransactSQLFormatterOptions options)
     {
       SqlComparisonBooleanExpressionType.Equals => "=",
       SqlComparisonBooleanExpressionType.GreaterThan => ">",
-      SqlComparisonBooleanExpressionType.LessThan => "<",
       SqlComparisonBooleanExpressionType.GreaterThanOrEqual => ">=",
+      SqlComparisonBooleanExpressionType.IsDistinctFrom => Keyword(Keywords.IS_DISTINCT_FROM),
+      SqlComparisonBooleanExpressionType.IsNotDistinctFrom => Keyword(Keywords.IS_NOT_DISTINCT_FROM),
+      SqlComparisonBooleanExpressionType.LeftStarEqualJoin => "*=",
+      SqlComparisonBooleanExpressionType.LessOrGreaterThan => "<>",
+      SqlComparisonBooleanExpressionType.LessThan => "<",
       SqlComparisonBooleanExpressionType.LessThanOrEqual => "<=",
       SqlComparisonBooleanExpressionType.NotEqual => "<>",
+      SqlComparisonBooleanExpressionType.NotGreaterThan => "<=",
+      SqlComparisonBooleanExpressionType.NotLessThan => ">=",
+      SqlComparisonBooleanExpressionType.RightStarEqualJoin => "=*",
+      SqlComparisonBooleanExpressionType.ValueEqual => "=",
       _ => comparisonType.ToString(),
     };
     string formatted = Operator(op);
@@ -1038,9 +1050,17 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     List<string> groupByLines = [string.Empty];
 
-    foreach (SqlGroupByItem groupByItem in groupByClause.Items)
+    for (int itemIndex = 0; itemIndex < groupByClause.Items.Count; itemIndex += 1)
     {
+      SqlGroupByItem groupByItem = groupByClause.Items[itemIndex];
+
       GroupByItem(groupByItem, ref groupByLines);
+
+      if (itemIndex < groupByClause.Items.Count - 1)
+      {
+        Utils.AppendToLast(groupByLines, ",");
+        groupByLines.Add(string.Empty);
+      }
     }
 
     Utils.AppendToLast(lines, Keyword(Keywords.GROUP_BY));
@@ -1469,9 +1489,15 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     string expression = literalExpression.Type switch
     {
+      LiteralValueType.Binary => $"0x{literalExpression.Value}",
       LiteralValueType.Default => Keyword(Keywords.DEFAULT),
       LiteralValueType.Identifier => Identifier(literalExpression.Value),
+      LiteralValueType.Image => literalExpression.Value,
+      LiteralValueType.Integer => literalExpression.Value,
+      LiteralValueType.Money => literalExpression.Value,
       LiteralValueType.Null => Keyword(Keywords.NULL),
+      LiteralValueType.Numeric => literalExpression.Value,
+      LiteralValueType.Real => literalExpression.Value,
       LiteralValueType.String => $"'{literalExpression.Value.Replace("'", "''")}'",
       LiteralValueType.UnicodeString => $"N'{literalExpression.Value.Replace("'", "''")}'",
       _ => literalExpression.Value,
@@ -1584,16 +1610,9 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
       ScalarExpression(scalarExpression, ref fetchExpressionLines);
 
-      if (fetchExpressionLines.Count > 1)
-      {
-        lines.Add($"{Keyword(Keywords.FETCH_NEXT)} (");
-        lines.AddRange(IndentStrings(fetchExpressionLines));
-        lines.Add($") {Keyword(Keywords.ROWS_ONLY)}");
-      }
-      else
-      {
-        lines.Add($"{Keyword(Keywords.FETCH_NEXT)} {fetchExpressionLines.First()} {Keyword(Keywords.ROWS_ONLY)}");
-      }
+      lines.Add($"{Keyword(Keywords.FETCH_NEXT)} ");
+      Utils.AppendToLast(lines, fetchExpressionLines);
+      Utils.AppendToLast(lines, $" {Keyword(Keywords.ROWS_ONLY)}");
     }
   }
 
@@ -2578,6 +2597,29 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     string raw = tableHintType switch
     {
+      SqlTableHintType.FastFirstRow => Keywords.FASTFIRSTROW,
+      SqlTableHintType.ForceSeek => Keywords.FORCESEEK,
+      SqlTableHintType.HoldLock => Keywords.HOLDLOCK,
+      SqlTableHintType.KeepDefaults => Keywords.KEEPDEFAULTS,
+      SqlTableHintType.KeepIdentity => Keywords.KEEPIDENTITY,
+      SqlTableHintType.NoExpand => Keywords.NOEXPAND,
+      SqlTableHintType.NoLock => Keywords.NOLOCK,
+      SqlTableHintType.NoWait => Keywords.NOWAIT,
+      SqlTableHintType.None => string.Empty,
+      SqlTableHintType.PageLock => Keywords.PAGELOCK,
+      SqlTableHintType.ReadCommitted => Keywords.READCOMMITTED,
+      SqlTableHintType.ReadCommittedLock => Keywords.READCOMMITTEDLOCK,
+      SqlTableHintType.ReadPast => Keywords.READPAST,
+      SqlTableHintType.ReadUncommitted => Keywords.READUNCOMMITTED,
+      SqlTableHintType.RepeatableRead => Keywords.REPEATABLEREAD,
+      SqlTableHintType.Rowlock => Keywords.ROWLOCK,
+      SqlTableHintType.Serializable => Keywords.SERIALIZABLE,
+      SqlTableHintType.Snapshot => Keywords.SNAPSHOT,
+      SqlTableHintType.SpatialWindowMaxCells => Keywords.SPATIAL_WINDOW_MAX_CELLS,
+      SqlTableHintType.TabLock => Keywords.TABLOCK,
+      SqlTableHintType.TabLockX => Keywords.TABLOCKX,
+      SqlTableHintType.UpdateLock => Keywords.UPDATELOCK,
+      SqlTableHintType.XLock => Keywords.XLOCK,
       _ => tableHintType.ToString(),
     };
     string value = Keyword(raw);
