@@ -975,6 +975,164 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a FOR BROWSE clause.
+  /// </summary>
+  /// <param name="forBrowseClause">
+  /// The FOR BROWSE clause to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted FOR BROWSE clause to.
+  /// </param>
+  public void ForBrowseClause(SqlForBrowseClause forBrowseClause, ref List<string> lines)
+  {
+    Utils.AppendToLast(lines, $"{Keyword(Keywords.FOR)} {Keyword(Keywords.BROWSE)}");
+  }
+
+  /// <summary>
+  /// Formats a FOR clause.
+  /// </summary>
+  /// <param name="forClause">
+  /// The FOR clause to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted FOR clause to.
+  /// </param>
+  public void ForClause(SqlForClause forClause, ref List<string> lines)
+  {
+    switch (forClause)
+    {
+      case SqlForBrowseClause forBrowseClause:
+        {
+          ForBrowseClause(forBrowseClause, ref lines);
+
+          break;
+        }
+
+      case SqlForXmlClause forXmlClause:
+        {
+          ForXmlClause(forXmlClause, ref lines);
+
+          break;
+        }
+
+      default:
+        {
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlForClause), forClause.GetType().Name, forClause.Sql);
+          lines.Add(forClause.Sql);
+
+          break;
+        }
+    }
+  }
+
+  /// <summary>
+  /// Formats a FOR XML AUTO clause.
+  /// </summary>
+  /// <param name="forXmlAutoClause"></param>
+  /// <param name="lines"></param>
+  public void ForXmlAutoClause(SqlForXmlAutoClause forXmlAutoClause, ref List<string> lines)
+  {
+    Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlForXmlAutoClause), forXmlAutoClause.Sql);
+    lines.Add(forXmlAutoClause.Sql);
+  }
+
+  /// <summary>
+  /// Formats a FOR XML clause.
+  /// </summary>
+  /// <param name="forXmlClause">
+  /// The FOR XML clause to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted FOR XML clause to.
+  /// </param>
+  public void ForXmlClause(SqlForXmlClause forXmlClause, ref List<string> lines)
+  {
+    switch (forXmlClause)
+    {
+      case SqlForXmlAutoClause forXmlAutoClause:
+        {
+          ForXmlAutoClause(forXmlAutoClause, ref lines);
+
+          break;
+        }
+
+      case SqlForXmlExplicitClause forXmlExplicitClause:
+        {
+          ForXmlExplicitClause(forXmlExplicitClause, ref lines);
+
+          break;
+        }
+
+      case SqlForXmlPathClause forXmlPathClause:
+        {
+          ForXmlPathClause(forXmlPathClause, ref lines);
+
+          break;
+        }
+
+      case SqlForXmlRawClause forXmlRawClause:
+        {
+          ForXmlRawClause(forXmlRawClause, ref lines);
+
+          break;
+        }
+
+      default:
+        {
+          Utils.Debug("Unrecognized {0}: {1} | SQL: {2}", nameof(SqlForXmlClause), forXmlClause.GetType().Name, forXmlClause.Sql);
+          lines.Add(forXmlClause.Sql);
+
+          break;
+        }
+    }
+  }
+
+  /// <summary>
+  /// Formats a FOR XML EXPLICIT clause.
+  /// </summary>
+  /// <param name="forXmlExplicitClause">
+  /// The FOR XML EXPLICIT clause to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted FOR XML EXPLICIT clause to.
+  /// </param>
+  public void ForXmlExplicitClause(SqlForXmlExplicitClause forXmlExplicitClause, ref List<string> lines)
+  {
+    Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlForXmlExplicitClause), forXmlExplicitClause.Sql);
+    lines.Add(forXmlExplicitClause.Sql);
+  }
+
+  /// <summary>
+  /// Formats a FOR XML PATH clause.
+  /// </summary>
+  /// <param name="forXmlPathClause">
+  /// The FOR XML PATH clause to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted FOR XML PATH clause to.
+  /// </param>
+  public void ForXmlPathClause(SqlForXmlPathClause forXmlPathClause, ref List<string> lines)
+  {
+    Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlForXmlPathClause), forXmlPathClause.Sql);
+    lines.Add(forXmlPathClause.Sql);
+  }
+
+  /// <summary>
+  /// Formats a FOR XML RAW clause.
+  /// </summary>
+  /// <param name="forXmlRawClause">
+  /// The FOR XML RAW clause to format.
+  /// </param>
+  /// <param name="lines">
+  /// The lines to append the formatted FOR XML RAW clause to.
+  /// </param>
+  public void ForXmlRawClause(SqlForXmlRawClause forXmlRawClause, ref List<string> lines)
+  {
+    Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlForXmlRawClause), forXmlRawClause.Sql);
+    lines.Add(forXmlRawClause.Sql);
+  }
+
+  /// <summary>
   /// Formats a FROM clause.
   /// </summary>
   /// <param name="fromClause">
@@ -1851,6 +2009,18 @@ internal class Formatter(TransactSQLFormatterOptions options)
     {
       lines.Add(string.Empty);
       HavingClause(havingClause, ref lines);
+    }
+
+    if (querySpecification.OrderByClause is SqlOrderByClause orderByClause)
+    {
+      lines.Add(string.Empty);
+      OrderByClause(orderByClause, ref lines);
+    }
+
+    if (querySpecification.ForClause is SqlForClause forClause)
+    {
+      lines.Add(string.Empty);
+      ForClause(forClause, ref lines);
     }
   }
 

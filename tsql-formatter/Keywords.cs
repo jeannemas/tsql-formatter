@@ -8,6 +8,7 @@ internal class Keywords
   public const string ASC = "ASC";
   public const string AT_TIME_ZONE = "AT TIME ZONE";
   public const string BETWEEN = "BETWEEN";
+  public const string BROWSE = "BROWSE";
   public const string CASE = "CASE";
   public const string COLLATE = "COLLATE";
   public const string CROSS_APPLY = "CROSS APPLY";
@@ -23,6 +24,7 @@ internal class Keywords
   public const string EXCEPT = "EXCEPT";
   public const string FASTFIRSTROW = "FASTFIRSTROW";
   public const string FETCH_NEXT = "FETCH NEXT";
+  public const string FOR = "FOR";
   public const string FORCESEEK = "FORCESEEK";
   public const string FROM = "FROM";
   public const string FULL_OUTER_JOIN = "FULL OUTER JOIN";
@@ -78,4 +80,5 @@ internal class Keywords
   public const string WITH = "WITH";
   public const string WITH_TIES = "WITH TIES";
   public const string XLOCK = "XLOCK";
+  public const string XML = "XML";
 }
