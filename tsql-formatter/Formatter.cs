@@ -208,7 +208,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
     QueryExpression(binaryQueryExpression.Left, ref lines);
     lines.Add(string.Empty);
     BinaryQueryOperatorType(binaryQueryExpression.Operator, ref lines);
-    Utils.AppendToLast(lines, " ");
+    lines.Add(string.Empty);
     QueryExpression(binaryQueryExpression.Right, ref lines);
   }
 

@@ -101,7 +101,7 @@ public static class SqlCodeObjectExtension
   /// </returns>
   public static string Json(this SqlCodeObject sqlCodeObject)
   {
-    IDictionary<string, string?> dictionary = sqlCodeObject
+    IDictionary<string, object?> dictionary = sqlCodeObject
       .GetType()
       .GetProperties()
       .Where(property =>
@@ -117,7 +117,7 @@ public static class SqlCodeObjectExtension
         property =>
           property.GetValue(sqlCodeObject) switch
           {
-            SqlCodeObject codeObject => codeObject.Sql,
+            SqlCodeObject codeObject => JsonSerializer.Deserialize<object>(codeObject.Json()),
             Enum enumValue => enumValue.ToString(),
             string s => s,
             null => null,
