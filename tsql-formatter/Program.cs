@@ -408,6 +408,19 @@ string select = @"
   FROM Sales
   GROUP BY Region, Product
   WITH ROLLUP;
+
+  SELECT Name, Salary FROM Employee FOR BROWSE;
+
+  SELECT Cust.CustomerID, OrderHeader.CustomerID, OrderHeader.SalesOrderID, OrderHeader.STATUS
+  FROM Sales.Customer Cust
+  INNER JOIN Sales.SalesOrderHeader OrderHeader ON Cust.CustomerID = OrderHeader.CustomerID
+  FOR XML AUTO;
+
+  SELECT Name, Salary FROM Employee FOR XML EXPLICIT;
+
+  SELECT Name, Salary FROM Employee FOR XML PATH('EmployeeData');
+
+  SELECT Name, Salary FROM Employee FOR XML RAW;
 ";
 string update = @"";
 string delete = @"";

@@ -1038,7 +1038,8 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void ForXmlAutoClause(SqlForXmlAutoClause forXmlAutoClause, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlForXmlAutoClause), forXmlAutoClause.Sql);
-    stringBuilder.AddNewLine(forXmlAutoClause.Sql);
+    stringBuilder.AddNewLine(forXmlAutoClause.Sql); // TODO
+    // stringBuilder.AddNewLine($"{Keyword(Keywords.FOR)} {Keyword(Keywords.XML)} {Keyword(Keywords.AUTO)}");
   }
 
   /// <summary>
@@ -1104,7 +1105,8 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void ForXmlExplicitClause(SqlForXmlExplicitClause forXmlExplicitClause, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlForXmlExplicitClause), forXmlExplicitClause.Sql);
-    stringBuilder.AddNewLine(forXmlExplicitClause.Sql);
+    stringBuilder.AddNewLine(forXmlExplicitClause.Sql); // TODO
+    // stringBuilder.AddNewLine($"{Keyword(Keywords.FOR)} {Keyword(Keywords.XML)} {Keyword(Keywords.EXPLICIT)}");
   }
 
   /// <summary>
@@ -1119,7 +1121,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void ForXmlPathClause(SqlForXmlPathClause forXmlPathClause, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlForXmlPathClause), forXmlPathClause.Sql);
-    stringBuilder.AddNewLine(forXmlPathClause.Sql);
+    stringBuilder.AddNewLine(forXmlPathClause.Sql); // TODO
   }
 
   /// <summary>
@@ -1134,7 +1136,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void ForXmlRawClause(SqlForXmlRawClause forXmlRawClause, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlForXmlRawClause), forXmlRawClause.Sql);
-    stringBuilder.AddNewLine(forXmlRawClause.Sql);
+    stringBuilder.AddNewLine(forXmlRawClause.Sql); // TODO
   }
 
   /// <summary>
@@ -1168,7 +1170,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void FullTextBooleanExpression(SqlFullTextBooleanExpression fullTextBooleanExpression, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlFullTextBooleanExpression), fullTextBooleanExpression.Sql);
-    stringBuilder.AddNewLine(fullTextBooleanExpression.Sql);
+    stringBuilder.AddNewLine(fullTextBooleanExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -1197,7 +1199,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void GrandTotalGroupByItem(SqlGrandTotalGroupByItem grandTotalGroupByItem, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlGrandTotalGroupByItem), grandTotalGroupByItem.Sql);
-    stringBuilder.AddNewLine(grandTotalGroupByItem.Sql);
+    stringBuilder.AddNewLine(grandTotalGroupByItem.Sql); // TODO
   }
 
   /// <summary>
@@ -1288,7 +1290,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void GroupBySets(SqlGroupBySets groupBySets, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlGroupBySets), groupBySets.Sql);
-    stringBuilder.AddNewLine(groupBySets.Sql);
+    stringBuilder.AddNewLine(groupBySets.Sql); // TODO
   }
 
   /// <summary>
@@ -1472,7 +1474,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void InBooleanExpression(SqlInBooleanExpression inBooleanExpression, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlInBooleanExpression), inBooleanExpression.Sql);
-    stringBuilder.AddNewLine(inBooleanExpression.Sql);
+    stringBuilder.AddNewLine(inBooleanExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -1520,7 +1522,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void IndexHint(SqlIndexHint indexHint, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlIndexHint), indexHint.Sql);
-    stringBuilder.AddNewLine(indexHint.Sql);
+    stringBuilder.AddNewLine(indexHint.Sql); // TODO
   }
 
   /// <summary>
@@ -1700,7 +1702,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void NotBooleanExpression(SqlNotBooleanExpression notBooleanExpression, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlNotBooleanExpression), notBooleanExpression.Sql);
-    stringBuilder.AddNewLine(notBooleanExpression.Sql);
+    stringBuilder.AddNewLine(notBooleanExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -1715,7 +1717,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void NullQueryExpression(SqlNullQueryExpression nullQueryExpression, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlNullQueryExpression), nullQueryExpression.Sql);
-    stringBuilder.AddNewLine(nullQueryExpression.Sql);
+    stringBuilder.AddNewLine(nullQueryExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -1730,7 +1732,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void NullScalarExpression(SqlNullScalarExpression nullScalarExpression, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlNullScalarExpression), nullScalarExpression.Sql);
-    stringBuilder.AddNewLine(nullScalarExpression.Sql);
+    stringBuilder.AddNewLine(nullScalarExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -1870,7 +1872,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void OutputClause(SqlOutputClause outputClause, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlOutputClause), outputClause.Sql);
-    stringBuilder.AddNewLine(outputClause.Sql);
+    stringBuilder.AddNewLine(outputClause.Sql); // TODO
   }
 
   /// <summary>
@@ -1885,7 +1887,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void OutputIntoClause(SqlOutputIntoClause outputIntoClause, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlOutputIntoClause), outputIntoClause.Sql);
-    stringBuilder.AddNewLine(outputIntoClause.Sql);
+    stringBuilder.AddNewLine(outputIntoClause.Sql); // TODO
   }
 
   /// <summary>
@@ -2037,6 +2039,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
     if (querySpecification.ForClause is SqlForClause forClause)
     {
+      Console.WriteLine("ForClause found");
       stringBuilder.AddNewLine();
       ForClause(forClause, ref stringBuilder);
     }
@@ -2071,7 +2074,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void RollupGroupByItem(SqlRollupGroupByItem rollupGroupByItem, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlRollupGroupByItem), rollupGroupByItem.Sql);
-    stringBuilder.AddNewLine(rollupGroupByItem.Sql);
+    stringBuilder.AddNewLine(rollupGroupByItem.Sql); // TODO
   }
 
   /// <summary>
@@ -2717,7 +2720,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void TableConstructorExpression(SqlTableConstructorExpression tableConstructorExpression, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlTableConstructorExpression), tableConstructorExpression.Sql);
-    stringBuilder.AddNewLine(tableConstructorExpression.Sql);
+    stringBuilder.AddNewLine(tableConstructorExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -2909,7 +2912,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void UdtMemberExpression(SqlUdtMemberExpression udtMemberExpression, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlUdtMemberExpression), udtMemberExpression.Sql);
-    stringBuilder.AddNewLine(udtMemberExpression.Sql);
+    stringBuilder.AddNewLine(udtMemberExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -2924,7 +2927,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void UnaryScalarExpression(SqlUnaryScalarExpression unaryScalarExpression, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlUnaryScalarExpression), unaryScalarExpression.Sql);
-    stringBuilder.AddNewLine(unaryScalarExpression.Sql);
+    stringBuilder.AddNewLine(unaryScalarExpression.Sql); // TODO
   }
 
   /// <summary>
@@ -2939,7 +2942,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void UpdateBooleanExpression(SqlUpdateBooleanExpression updateBooleanExpression, ref StringBuilder stringBuilder)
   {
     Utils.Debug("Unimplemented {0}: SQL: {1}", nameof(SqlUpdateBooleanExpression), updateBooleanExpression.Sql);
-    stringBuilder.AddNewLine(updateBooleanExpression.Sql);
+    stringBuilder.AddNewLine(updateBooleanExpression.Sql); // TODO
   }
 
   /// <summary>

@@ -7,6 +7,7 @@ internal class Keywords
   public const string AS = "AS";
   public const string ASC = "ASC";
   public const string AT_TIME_ZONE = "AT TIME ZONE";
+  public const string AUTO = "AUTO";
   public const string BETWEEN = "BETWEEN";
   public const string BROWSE = "BROWSE";
   public const string CASE = "CASE";
@@ -22,6 +23,7 @@ internal class Keywords
   public const string END = "END";
   public const string ESCAPE = "ESCAPE";
   public const string EXCEPT = "EXCEPT";
+  public const string EXPLICIT = "EXPLICIT";
   public const string FASTFIRSTROW = "FASTFIRSTROW";
   public const string FETCH_NEXT = "FETCH NEXT";
   public const string FOR = "FOR";
