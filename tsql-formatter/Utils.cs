@@ -20,6 +20,24 @@ internal class Utils
     Console.WriteLine(message, args);
 #endif
   }
+
+  /// <summary>
+  /// Handles not implemented SqlCodeObject types by logging a debug message and appending the raw SQL to the StringBuilder.
+  /// </summary>
+  /// <param name="codeObject">
+  /// The not implemented SqlCodeObject.
+  /// </param>
+  /// <param name="stringBuilder">
+  /// The StringBuilder to append the raw SQL to.
+  /// </param>
+  public static void HandleNotImplemented(SqlCodeObject codeObject, ref StringBuilder stringBuilder)
+  {
+    string sql = codeObject.Sql;
+
+    Debug("Not implemented {0} | SQL: {1}", codeObject.GetType().Name, sql);
+
+    stringBuilder.AddNewLine(sql);
+  }
 }
 
 public static class SqlCodeObjectExtension
@@ -40,7 +58,7 @@ public static class SqlCodeObjectExtension
   /// </returns>
   public static string Json(this SqlCodeObject sqlCodeObject)
   {
-    IDictionary<string, object?> dictionary = sqlCodeObject
+    IDictionary<string, string?> dictionary = sqlCodeObject
       .GetType()
       .GetProperties()
       .Where(property =>
@@ -56,7 +74,7 @@ public static class SqlCodeObjectExtension
         property =>
           property.GetValue(sqlCodeObject) switch
           {
-            SqlCodeObject codeObject => JsonSerializer.Deserialize<object>(codeObject.Json()),
+            SqlCodeObject codeObject => codeObject.Sql /* JsonSerializer.Deserialize<object>(codeObject.Json(), jsonSerializerOptions) */,
             Enum enumValue => enumValue.ToString(),
             string s => s,
             null => null,

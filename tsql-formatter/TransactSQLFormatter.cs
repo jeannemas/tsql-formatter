@@ -16,15 +16,6 @@ public class TransactSQLFormatter(TransactSQLFormatterOptions options)
   private readonly Formatter Formatter = new(options);
 
   /// <summary>
-  /// The parsing options.
-  /// </summary>
-  private readonly ParseOptions ParseOptions = new()
-  {
-    CompatibilityLevel = Microsoft.SqlServer.Management.SqlParser.Common.DatabaseCompatibilityLevel.Version150,
-    TransactSqlVersion = Microsoft.SqlServer.Management.SqlParser.Common.TransactSqlVersion.Version150,
-  };
-
-  /// <summary>
   /// Formats the provided T-SQL script according to the configured options.
   /// </summary>
   /// <param name="tsqlScript">
@@ -35,7 +26,7 @@ public class TransactSQLFormatter(TransactSQLFormatterOptions options)
   /// </returns>
   public string FormatTsql(string tsqlScript)
   {
-    ParseResult parseResult = Parser.Parse(tsqlScript, ParseOptions);
+    ParseResult parseResult = Parser.Parse(tsqlScript);
 
     return Formatter.ParseResult(parseResult);
   }
