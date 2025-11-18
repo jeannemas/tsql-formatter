@@ -36,17 +36,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
     }
     else if (aggregateFunctionCallExpression.Arguments is SqlScalarExpressionCollection scalarExpressionCollection)
     {
-      for (int argumentIndex = 0; argumentIndex < scalarExpressionCollection.Count; argumentIndex += 1)
-      {
-        SqlScalarExpression scalarExpression = scalarExpressionCollection[argumentIndex];
-
-        ScalarExpression(scalarExpression, ref stringBuilder);
-
-        if (argumentIndex < scalarExpressionCollection.Count - 1)
-        {
-          stringBuilder.AppendToLastLine(", ");
-        }
-      }
+      ScalarExpressionCollection(scalarExpressionCollection, ref stringBuilder);
     }
 
     stringBuilder.AppendToLastLine(")");
@@ -456,17 +446,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
           }
           else if (builtinScalarFunctionCallExpression.Arguments is SqlScalarExpressionCollection scalarExpressionCollection)
           {
-            for (int argumentIndex = 0; argumentIndex < scalarExpressionCollection.Count; argumentIndex += 1)
-            {
-              SqlScalarExpression scalarExpression = scalarExpressionCollection[argumentIndex];
-
-              ScalarExpression(scalarExpression, ref stringBuilder);
-
-              if (argumentIndex < scalarExpressionCollection.Count - 1)
-              {
-                stringBuilder.AppendToLastLine(", ");
-              }
-            }
+            ScalarExpressionCollection(scalarExpressionCollection, ref stringBuilder);
           }
 
           stringBuilder.AppendToLastLine(")");
@@ -542,17 +522,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
           }
           else if (castExpression.Arguments is SqlScalarExpressionCollection scalarExpressionCollection)
           {
-            for (int argumentIndex = 0; argumentIndex < scalarExpressionCollection.Count; argumentIndex += 1)
-            {
-              SqlScalarExpression scalarExpression = scalarExpressionCollection[argumentIndex];
-
-              ScalarExpression(scalarExpression, ref stringBuilder);
-
-              if (argumentIndex < scalarExpressionCollection.Count - 1)
-              {
-                stringBuilder.AppendToLastLine(", ");
-              }
-            }
+            ScalarExpressionCollection(scalarExpressionCollection, ref stringBuilder);
           }
 
           stringBuilder.AppendToLastLine($" {Keyword(Keywords.AS)} ");
@@ -761,18 +731,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       if (convertExpression.Arguments is SqlScalarExpressionCollection scalarExpressionCollection)
       {
         stringBuilder.AppendToLastLine(", ");
-
-        for (int argumentIndex = 0; argumentIndex < scalarExpressionCollection.Count; argumentIndex += 1)
-        {
-          SqlScalarExpression scalarExpression = scalarExpressionCollection[argumentIndex];
-
-          ScalarExpression(scalarExpression, ref stringBuilder);
-
-          if (argumentIndex < scalarExpressionCollection.Count - 1)
-          {
-            stringBuilder.AppendToLastLine(", ");
-          }
-        }
+        ScalarExpressionCollection(scalarExpressionCollection, ref stringBuilder);
       }
     }
 
@@ -791,20 +750,32 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void CubeGroupByItem(SqlCubeGroupByItem cubeGroupByItem, ref StringBuilder stringBuilder)
   {
     stringBuilder.AppendToLastLine($"{Keyword(Keywords.CUBE)} (");
+    CubeRollupArgumentCollection(cubeGroupByItem.Items, ref stringBuilder);
+    stringBuilder.AppendToLastLine(")");
+  }
 
-    for (int itemIndex = 0; itemIndex < cubeGroupByItem.Items.Count; itemIndex += 1)
+  /// <summary>
+  /// Formats a CUBE/ROLLUP argument collection.
+  /// </summary>
+  /// <param name="cubeRollupArgumentCollection">
+  /// The CUBE/ROLLUP argument collection to format.
+  /// </param>
+  /// <param name="stringBuilder">
+  /// The string builder to append the formatted CUBE/ROLLUP argument collection to.
+  /// </param>
+  private void CubeRollupArgumentCollection(SqlCubeRollupArgumentCollection cubeRollupArgumentCollection, ref StringBuilder stringBuilder)
+  {
+    for (int index = 0; index < cubeRollupArgumentCollection.Count; index += 1)
     {
-      SqlSimpleGroupByItem simpleGroupByItem = cubeGroupByItem.Items[itemIndex];
+      SqlSimpleGroupByItem simpleGroupByItem = cubeRollupArgumentCollection[index];
 
       SimpleGroupByItem(simpleGroupByItem, ref stringBuilder);
 
-      if (itemIndex < cubeGroupByItem.Items.Count - 1)
+      if (index < cubeRollupArgumentCollection.Count - 1)
       {
         stringBuilder.AppendToLastLine(", ");
       }
     }
-
-    stringBuilder.AppendToLastLine(")");
   }
 
   /// <summary>
@@ -1202,20 +1173,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   {
     StringBuilder groupBy = new();
 
-    for (int itemIndex = 0; itemIndex < groupByClause.Items.Count; itemIndex += 1)
-    {
-      SqlGroupByItem groupByItem = groupByClause.Items[itemIndex];
-
-      GroupByItem(groupByItem, ref groupBy);
-
-      if (itemIndex < groupByClause.Items.Count - 1)
-      {
-        groupBy
-          .AppendToLastLine(",")
-          .AddNewLine();
-      }
-    }
-
+    GroupByItemCollection(groupByClause.Items, ref groupBy);
     stringBuilder
       .AppendToLastLine(Keyword(Keywords.GROUP_BY))
       .AddNewLines(IndentLines(groupBy));
@@ -1261,6 +1219,32 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
           break;
         }
+    }
+  }
+
+  /// <summary>
+  /// Formats a GROUP BY item collection.
+  /// </summary>
+  /// <param name="groupByItemCollection">
+  /// The GROUP BY item collection to format.
+  /// </param>
+  /// <param name="stringBuilder">
+  /// The string builder to append the formatted GROUP BY item collection to.
+  /// </param>
+  private void GroupByItemCollection(SqlGroupByItemCollection groupByItemCollection, ref StringBuilder stringBuilder)
+  {
+    for (int index = 0; index < groupByItemCollection.Count; index += 1)
+    {
+      SqlGroupByItem groupByItem = groupByItemCollection[index];
+
+      GroupByItem(groupByItem, ref stringBuilder);
+
+      if (index < groupByItemCollection.Count - 1)
+      {
+        stringBuilder
+          .AppendToLastLine(",")
+          .AddNewLine();
+      }
     }
   }
 
@@ -1429,17 +1413,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
     }
     else if (identityFunctionCallExpression.Arguments is SqlScalarExpressionCollection scalarExpressionCollection)
     {
-      for (int argumentIndex = 0; argumentIndex < scalarExpressionCollection.Count; argumentIndex += 1)
-      {
-        SqlScalarExpression scalarExpression = scalarExpressionCollection[argumentIndex];
-
-        ScalarExpression(scalarExpression, ref stringBuilder);
-
-        if (argumentIndex < scalarExpressionCollection.Count - 1)
-        {
-          stringBuilder.AppendToLastLine(", ");
-        }
-      }
+      ScalarExpressionCollection(scalarExpressionCollection, ref stringBuilder);
     }
 
     stringBuilder.AppendToLastLine(")");
@@ -1800,18 +1774,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
   private void OrderByClause(SqlOrderByClause orderByClause, ref StringBuilder stringBuilder)
   {
     stringBuilder.AddNewLine(Keyword(Keywords.ORDER_BY));
-
-    for (int itemIndex = 0; itemIndex < orderByClause.Items.Count; itemIndex += 1)
-    {
-      SqlOrderByItem orderByItem = orderByClause.Items[itemIndex];
-
-      OrderByItem(orderByItem, ref stringBuilder);
-
-      if (itemIndex < orderByClause.Items.Count - 1)
-      {
-        stringBuilder.AppendToLastLine(",");
-      }
-    }
+    OrderByItemCollection(orderByClause.Items, ref stringBuilder);
 
     if (orderByClause.OffsetFetchClause is SqlOffsetFetchClause offsetFetchClause)
     {
@@ -1835,6 +1798,30 @@ internal class Formatter(TransactSQLFormatterOptions options)
     ScalarExpression(orderByItem.Expression, ref expression);
     stringBuilder.AddNewLines(IndentLines(expression));
     SortOrder(orderByItem.SortOrder, ref stringBuilder);
+  }
+
+  /// <summary>
+  /// Formats an ORDER BY item collection.
+  /// </summary>
+  /// <param name="orderByItemCollection">
+  /// The ORDER BY item collection to format.
+  /// </param>
+  /// <param name="stringBuilder">
+  /// The string builder to append the formatted ORDER BY item collection to.
+  /// </param>
+  private void OrderByItemCollection(SqlOrderByItemCollection orderByItemCollection, ref StringBuilder stringBuilder)
+  {
+    for (int index = 0; index < orderByItemCollection.Count; index += 1)
+    {
+      SqlOrderByItem orderByItem = orderByItemCollection[index];
+
+      OrderByItem(orderByItem, ref stringBuilder);
+
+      if (index < orderByItemCollection.Count - 1)
+      {
+        stringBuilder.AppendToLastLine(",");
+      }
+    }
   }
 
   /// <summary>
@@ -2193,6 +2180,30 @@ internal class Formatter(TransactSQLFormatterOptions options)
   }
 
   /// <summary>
+  /// Formats a scalar expression collection.
+  /// </summary>
+  /// <param name="scalarExpressionCollection">
+  /// The scalar expression collection to format.
+  /// </param>
+  /// <param name="stringBuilder">
+  /// The string builder to append the formatted scalar expression collection to.
+  /// </param>
+  private void ScalarExpressionCollection(SqlScalarExpressionCollection scalarExpressionCollection, ref StringBuilder stringBuilder)
+  {
+    for (int index = 0; index < scalarExpressionCollection.Count; index += 1)
+    {
+      SqlScalarExpression scalarExpression = scalarExpressionCollection[index];
+
+      ScalarExpression(scalarExpression, ref stringBuilder);
+
+      if (index < scalarExpressionCollection.Count - 1)
+      {
+        stringBuilder.AppendToLastLine(", ");
+      }
+    }
+  }
+
+  /// <summary>
   /// Formats a scalar function call expression.
   /// </summary>
   /// <param name="scalarFunctionCallExpression">
@@ -2366,17 +2377,7 @@ internal class Formatter(TransactSQLFormatterOptions options)
       TopSpecification(topSpecification, ref stringBuilder);
     }
 
-    for (int selectExpressionIndex = 0; selectExpressionIndex < selectClause.SelectExpressions.Count; selectExpressionIndex += 1)
-    {
-      SqlSelectExpression selectExpression = selectClause.SelectExpressions[selectExpressionIndex];
-
-      SelectExpression(selectExpression, ref stringBuilder);
-
-      if (selectExpressionIndex < selectClause.SelectExpressions.Count - 1)
-      {
-        stringBuilder.AppendToLastLine(",");
-      }
-    }
+    SelectExpressionCollection(selectClause.SelectExpressions, ref stringBuilder);
   }
 
   /// <summary>
@@ -2419,6 +2420,30 @@ internal class Formatter(TransactSQLFormatterOptions options)
 
           break;
         }
+    }
+  }
+
+  /// <summary>
+  /// Formats a select expression collection.
+  /// </summary>
+  /// <param name="selectExpressionCollection">
+  /// The select expression collection to format.
+  /// </param>
+  /// <param name="stringBuilder">
+  /// The string builder to append the formatted select expression collection to.
+  /// </param>
+  private void SelectExpressionCollection(SqlSelectExpressionCollection selectExpressionCollection, ref StringBuilder stringBuilder)
+  {
+    for (int index = 0; index < selectExpressionCollection.Count; index += 1)
+    {
+      SqlSelectExpression selectExpression = selectExpressionCollection[index];
+
+      SelectExpression(selectExpression, ref stringBuilder);
+
+      if (index < selectExpressionCollection.Count - 1)
+      {
+        stringBuilder.AppendToLastLine(",");
+      }
     }
   }
 
@@ -2922,16 +2947,9 @@ internal class Formatter(TransactSQLFormatterOptions options)
     ObjectIdentifier(userDefinedScalarFunctionCallExpression.ObjectIdentifier, ref stringBuilder);
     stringBuilder.AppendToLastLine("(");
 
-    for (int argumentIndex = 0; argumentIndex < userDefinedScalarFunctionCallExpression.Arguments.Count; argumentIndex += 1)
+    if (userDefinedScalarFunctionCallExpression.Arguments is SqlScalarExpressionCollection scalarExpressionCollection)
     {
-      SqlScalarExpression scalarExpression = userDefinedScalarFunctionCallExpression.Arguments[argumentIndex];
-
-      ScalarExpression(scalarExpression, ref stringBuilder);
-
-      if (argumentIndex < userDefinedScalarFunctionCallExpression.Arguments.Count - 1)
-      {
-        stringBuilder.AppendToLastLine(", ");
-      }
+      ScalarExpressionCollection(scalarExpressionCollection, ref stringBuilder);
     }
 
     stringBuilder.AppendToLastLine(")");
